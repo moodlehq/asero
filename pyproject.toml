@@ -1,0 +1,106 @@
+[project]
+name = "asero"
+description = "Another semantic router, with some particularities that may, or may not, suit your need."
+keywords = ["bot", "llm", "semantic router", "mcp", "model context protocol",  "ai", "research"]
+
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+readme = "README.md"
+
+authors = [
+    {name = "Eloy Lafuente (stronk7)", email = "stronk7@stronk7.com"},
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+    "Private :: Do Not Upload",
+]
+
+dynamic = ["version"]
+
+requires-python = ">=3.13"
+dependencies = [
+    "fastmcp ~= 2.11.3",
+    "openai ~= 1.99.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build ~= 1.3.0",
+    "coverage ~= 7.10.3",
+    "detect-secrets ~= 1.5.0",
+    "pre-commit ~= 4.3.0",
+    "pyright ~= 1.1.402",
+    "ruff ~= 0.12.8",
+]
+
+[project.scripts]
+asero = "asero.main:main"
+
+[project.urls]
+Homepage = "https://example.com/research/another-semantic-router"
+Documentation = "https://example.com/research/another-semantic-router"
+Repository = "https://example.com/research/another-semantic-router"
+
+[tool.coverage.run]
+branch = true
+source = [
+    "asero",
+]
+omit = [
+    "tests"
+]
+command_line = "-m unittest discover -t . -s tests"
+
+[tool.pyright]
+include = [
+    "asero"
+]
+exclude = [
+    "tests"
+]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+preview = true
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules
+select = [
+    "E",    # pycodestyle (errors, all them)
+    "F",    # pyflakes
+    "I",    # imports
+    "N",    # pep8 naming
+    "D",    # pydocstyle
+    "Q",    # flake8-quotes
+    "ASYNC",# flake8-async
+    "CPY",  # copyright header
+    "EM",   # flake8-errmsg
+    "UP",   # pyupgrade
+]
+ignore = [
+    "D203", # 1 blank line required before class docstring (incompatible with D211, that we use)
+    "D213", # Multi-line docstring summary should start at the second line (incompatible with D212, that we use)
+]
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["F401"] # Ignore the unused imports in init files because we use them to make easier package paths.
+"tests/**/test_**.py" = ["D101", "D102", "D103"] # Don't require doc strings for tests
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
