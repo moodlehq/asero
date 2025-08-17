@@ -10,7 +10,7 @@ def main():
     # Let's play with the router.
     while True:
         try:
-            print(f"\nType a query to see top-{top} semantic routes (ctrl-C to exit):")
+            print(f"Type a query to see top-{top} semantic routes (ctrl-C to exit):")
             q = input("You: ").strip()
             matches = router.root.top_n_routes(q, router.embedding_cache, top_n=top)
             print("")
@@ -19,10 +19,10 @@ def main():
             for route, score, depth, is_leaf in matches:
                 print(f"  {route:<55} {score:.7f} (depth={depth}, is_leaf={is_leaf})")
             if not matches:
-                print("No matches found.")
+                print("No matches (over threshold) found.")
             print("===== ===== ===== ===== =====")
         except KeyboardInterrupt:
-            router.logger.info("\nExiting.")
+            print("\nExiting.")
             break
 
 

@@ -4,7 +4,7 @@
 import logging
 from typing import Self
 
-from asero import LOG_LEVEL
+from asero import LOG_LEVEL, __version__
 
 from asero.config import config, SemanticRouterConfig
 from asero.embedding import get_or_create_embeddings, cosine_similarity
@@ -12,9 +12,6 @@ from asero.yaml_utils import compute_dict_checksum, load_tree_from_yaml, save_em
     load_or_regenerate_embedding_cache_for_tree
 from asero.logger import setup_logging
 from asero.yaml_utils import save_tree_to_yaml
-
-logger = logging.getLogger(__name__)
-
 
 class SemanticRouterNode:
     """
@@ -222,12 +219,12 @@ class SemanticRouterNode:
                     if utt not in sim_cache:
                         sim_cache[utt] = cosine_similarity(query_embedding, embedding_cache[utt])
                     scores.append(sim_cache[utt])
-                max_score = max(scores)
+                max_score = max(scores)  # We can change this to averages or others in the future.
             else:
                 max_score = float('-inf')
             threshold = getattr(node, "threshold", config.threshold)
             if max_score < threshold:
-                return
+                return  # Children aren't going to be better, (because we are using the max). End branch.
             children_best = []
             for child in node.children:
                 visit(child, path + [node.name])
@@ -236,7 +233,7 @@ class SemanticRouterNode:
                     children_best.append(results[child_path][0])
             if children_best and max(children_best) >= max_score:
                 if path_str in results:
-                    del results[path_str]
+                    del results[path_str] # Remove parents if there is any better child.
                 return
             results[path_str] = (max_score, len(path) + 1, not node.children)
 
@@ -376,8 +373,9 @@ class SemanticRouter:
 
     def __init__(self):
         setup_logging(level=LOG_LEVEL)
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("Another Semantic Router starting up...")
+        logger = logging.getLogger(__name__)
+        logger.info("Another Semantic Router (asero) starting up...")
+        logger.info(f"Version: {__version__}")
 
         self.root, self.tree_dict = SemanticRouterNode.load(config)
         self.tree_checksum = compute_dict_checksum(self.tree_dict)

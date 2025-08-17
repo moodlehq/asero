@@ -7,6 +7,16 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 def get_embeddings(texts, config):
+    """
+    Compute embeddings for a list of texts using the OpenAI API.
+
+    Args:
+        texts (list[str]): List of text strings to embed.
+        config (SemanticRouterConfig): Configuration object.
+
+    Returns:
+        list[np.ndarray]: List of embedding vectors.
+    """
     if not texts:
         return []
     embeddings = []
@@ -20,7 +30,19 @@ def get_embeddings(texts, config):
         embeddings.extend([np.array(d.embedding) for d in resp.data])
     return embeddings
 
+
 def get_or_create_embeddings(utterances, config, cache):
+    """
+    Retrieve embeddings for a list of utterances, fetching missing ones from the API.
+
+    Args:
+        utterances (list[str]): List of utterances to get embeddings for.
+        config (SemanticRouterConfig): Configuration object.
+        cache (dict): Dictionary of existing utterance embeddings.
+
+    Returns:
+        list[np.ndarray]: List of embedding vectors in the same order as input utterances.
+    """
     embeddings = []
     to_fetch = []
     fetch_indices = []
@@ -39,5 +61,16 @@ def get_or_create_embeddings(utterances, config, cache):
             embeddings[idx] = fetched[i]
     return embeddings
 
-def cosine_similarity(a, b):
+
+def cosine_similarity(a: np.ndarray, b: np.ndarray):
+    """
+    Compute cosine similarity between two vectors.
+
+    Args:
+        a (np.ndarray): First vector.
+        b (np.ndarray): Second vector.
+
+    Returns:
+        float: Cosine similarity score between -1 and 1.
+    """
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-16))
