@@ -2,21 +2,36 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 
 import os
+import logging
 from openai import OpenAI
 from dataclasses import dataclass
+from dotenv import load_dotenv
+from asero import ROOT_DIR
+
+logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+load_dotenv()
 
 # --- OpenAI Embedding helpers --- #
-os.environ["OPENAI_API_KEY"] = "sk-JsnDAbVmdorAQ8wsXS-hSg"
-os.environ["OPENAI_BASE_URL"] = "http://0.0.0.0:4000"
-OPENAI_EMBEDDING_MODEL = "nomic-embed-text"
-EMBEDDING_CHUNK_SIZE = 128  # Number of utterances to embed in one OpenAI API call
+api_key = os.getenv("OPENAI_API_KEY")
+base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")  # Default to OpenAI's URL
+
+if not api_key:
+    raise ValueError("OPENAI_API_KEY must be set in the environment")
+
+# --- Embedding model, chunk size, and dimensions ---
+embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
+embedding_dimensions = int(os.getenv("EMBEDDING_DIMENSIONS", "768"))
+embedding_chunk_size = int(os.getenv("EMBEDDING_CHUNK_SIZE", "128"))
+default_threshold = float(os.getenv("DEFAULT_THRESHOLD", "0.5"))
 
 # --- File paths --- #
-YAML_TREE_PATH = "semantic_router_tree.yaml"
-CACHE_JSON_PATH = "semantic_router_cache.json"
-
-# --- Other constants --- #
-DEFAULT_THRESHOLD = 0.5
+yaml_tree_path = os.getenv("YAML_FILE", "router_example.yaml")
+# If file is relative, make it relative to the project base dir.
+if not os.path.isabs(yaml_tree_path):
+    yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
+cache_json_path = f"{os.path.splitext(yaml_tree_path)[0]}_cache.json"
 
 @dataclass
 class SemanticRouterConfig:
@@ -25,13 +40,32 @@ class SemanticRouterConfig:
 
     Attributes:
         client (any): OpenAI API client instance for embedding queries.
-        model (str): Embedding model name.
+        embedding_model (str): Embedding model name.
+        embedding_dimensions (int): Dimensionality of embeddings.
+        embedding_chunk_size (int): Number of texts to process in one batch.
+        threshold (float): Similarity threshold for routing.
         yaml_file (str): Path to tree YAML definition.
         cache_file (str): Path to embedding cache JSON file.
     """
     client: OpenAI
-    model: str
+    embedding_model: str
+    embedding_dimensions: int
+    embedding_chunk_size: int
+    threshold: float
     yaml_file: str
     cache_file: str
 
-client = OpenAI()
+client = OpenAI(
+    api_key=api_key,
+    base_url=base_url
+)
+
+config = SemanticRouterConfig(
+    client=client,
+    embedding_model=embedding_model,
+    embedding_dimensions=embedding_dimensions,
+    embedding_chunk_size=embedding_chunk_size,
+    threshold=default_threshold,
+    yaml_file=yaml_tree_path,
+    cache_file=cache_json_path,
+)

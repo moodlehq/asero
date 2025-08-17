@@ -1,0 +1,56 @@
+name: Router Example
+children:
+- name: commander_room
+  children:
+  - name: rss_management
+    threshold: 0.5
+    utterances:
+    - Manage RSS feeds
+    - List all RSS management commands
+    - Show me the RSS management commands
+  - name: features_management
+    threshold: 0.5
+    children:
+    - name: features_list
+      threshold: 0.5
+      utterances:
+      - List all features
+      - Which are the bot features?
+      - What features are available?
+      - Show me the features
+    - name: feature_grant
+      threshold: 0.5
+      utterances:
+      - Grant feature <<feature_name>> in room <<room_name>>
+      - Enable feature <<feature_name>> for room <<room_name>>
+      - Allow feature <<feature_name>> at room <<room_name>>
+    - name: feature_revoke
+      threshold: 0.5
+      utterances:
+      - Revoke feature <<feature_name>> in room <<room_name>>
+      - Disable feature <<feature_name>> for room <<room_name>>
+      - Disallow feature <<feature_name>> at room <<room_name>>
+- name: url_summaries
+  threshold: 0.5
+  utterances:
+  - Give me a summary of https://example.com
+  - Can you make a summary of https://example.com ?
+  - 'I need a summary of this link: https://example.com'
+- name: chat_summaries
+  threshold: 0.6
+  utterances:
+  - Summarize this chat
+  - Can you summarize our conversation?
+  - I need a summary of this chat
+- name: image_generation
+  threshold: 0.7
+  utterances:
+  - Create an image of <<anything>>
+  - Generate an image about <<anything>>
+  - Can you make an image about <<anything>>
+- name: chitchat
+  threshold: 0.8
+  utterances:
+  - Let's chat about <<anything>>
+  - Can we talk about <<anything>>?
+  - I want to discuss <<anything>>

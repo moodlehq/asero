@@ -1,0 +1,116 @@
+name: MoodleBot
+children:
+- name: commander_room
+  threshold: 0.5
+  children:
+  - name: rss_management
+    threshold: 0.5
+    utterances:
+    - Manage RSS feeds
+    - List all RSS management commands
+    - Show me the RSS management commands
+    - What are RSS feeds
+    children:
+    - name: rss_list
+      threshold: 0.5
+      utterances:
+      - List all RSS feeds
+      - Which are the bot RSS feeds?
+      - What RSS feeds are available?
+      - Show me the RSS feeds
+    - name: rss_in_room
+      threshold: 0.5
+      utterances:
+      - List RSS feeds in this room
+      - What RSS feeds are enabled in this room?
+      - Show me the RSS feeds of this room
+      - list rss in room <<room_name>>
+      - Which RSS feeds are enabled in room <<room_name>>?
+      - What RSS feeds are available in room <<room_name>>?
+    - name: rss_details
+      threshold: 0.5
+      utterances:
+      - Get RSS feed <<feed_name>>
+      - What is the RSS feed <<feed_name>>?
+      - Tell me about the RSS feed <<feed_name>>
+    - name: rss_grant
+      threshold: 0.5
+      utterances:
+      - Grant RSS feed <<feed_name>> in room <<room_name>>
+      - Enable RSS feed <<feed_name>> for room <<room_name>>
+      - Allow RSS feed <<feed_name>> at room <<room_name>>
+    - name: rss_revoke
+      threshold: 0.5
+      utterances:
+      - Revoke RSS feed <<feed_name>> in room <<room_name>>
+      - Disable RSS feed <<feed_name>> for room <<room_name>>
+      - Disallow RSS feed <<feed_name>> at room <<room_name>>
+  - name: features_management
+    threshold: 0.5
+    utterances:
+    - Manage features
+    - List all features management commands
+    - Show me the features management commands
+    - What are features
+    children:
+    - name: features_list
+      threshold: 0.5
+      utterances:
+      - List all features
+      - Which are the bot features?
+      - What features are available?
+      - Show me the features
+    - name: features_in_room
+      threshold: 0.5
+      utterances:
+      - List features in this room
+      - What features are enabled in this room?
+      - Show me the features of this room
+      - list features in room <<room_name>>
+      - Which features are enabled in room <<room_name>>?
+      - What features are available in room <<room_name>>?
+    - name: feature_details
+      threshold: 0.5
+      utterances:
+      - Get feature <<feature_name>>
+      - What is the feature <<feature_name>>?
+      - Tell me about the feature <<feature_name>>
+    - name: feature_grant
+      threshold: 0.5
+      utterances:
+      - Grant feature <<feature_name>> in room <<room_name>>
+      - Enable feature <<feature_name>> for room <<room_name>>
+      - Allow feature <<feature_name>> at room <<room_name>>
+    - name: feature_revoke
+      threshold: 0.5
+      utterances:
+      - Revoke feature <<feature_name>> in room <<room_name>>
+      - Disable feature <<feature_name>> for room <<room_name>>
+      - Disallow feature <<feature_name>> at room <<room_name>>
+- name: url_summaries
+  threshold: 0.5
+  utterances:
+  - Give me a summary of https://example.com
+  - Can you make a summary of https://example.com ?
+  - 'I need a summary of this link: https://example.com'
+- name: chat_summaries
+  threshold: 0.5
+  utterances:
+  - Summarize this chat
+  - Can you summarize our conversation?
+  - I need a summary of this chat
+- name: image_generation
+  threshold: 0.5
+  utterances:
+  - Create an image of <<anything>>
+  - Generate an image about <<anything>>
+  - Can you make an image about <<anything>>
+  - Add <<anything>> to the image
+  - Remove <<anything>> from the image
+  - Modify the image by <<anything>>
+- name: chitchat
+  threshold: 0.8
+  utterances:
+  - Let's chat about <<anything>>
+  - Can we talk about <<anything>>?
+  - I want to discuss <<anything>>
