@@ -4,11 +4,14 @@
 import logging
 from typing import List, Dict, Tuple, Optional, Self
 
+from asero import LOG_LEVEL
+
 from asero.config import config, SemanticRouterConfig
 from asero.embedding import get_or_create_embeddings, cosine_similarity
-from asero.yaml_utils import compute_dict_checksum, load_tree_from_yaml, save_embedding_cache
+from asero.yaml_utils import compute_dict_checksum, load_tree_from_yaml, save_embedding_cache, \
+    load_or_regenerate_embedding_cache_for_tree
 from asero.logger import setup_logging
-from yaml_utils import save_tree_to_yaml
+from asero.yaml_utils import save_tree_to_yaml
 
 logger = logging.getLogger(__name__)
 

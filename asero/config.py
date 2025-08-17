@@ -27,7 +27,7 @@ embedding_chunk_size = int(os.getenv("EMBEDDING_CHUNK_SIZE", "128"))
 default_threshold = float(os.getenv("DEFAULT_THRESHOLD", "0.5"))
 
 # --- File paths --- #
-yaml_tree_path = os.getenv("YAML_FILE", "router_example.yaml")
+yaml_tree_path = os.getenv("ROUTER_YAML_FILE", "router_example.yaml")
 # If file is relative, make it relative to the project base dir.
 if not os.path.isabs(yaml_tree_path):
     yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
