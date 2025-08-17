@@ -39,13 +39,13 @@ class SemanticRouterConfig:
     Dataclass for semantic router configuration.
 
     Attributes:
-        client (any): OpenAI API client instance for embedding queries.
-        embedding_model (str): Embedding model name.
+        client (OpenAI): OpenAI API client instance for embedding queries.
+        embedding_model (str): Name of the embedding model to use.
         embedding_dimensions (int): Dimensionality of embeddings.
         embedding_chunk_size (int): Number of texts to process in one batch.
         threshold (float): Similarity threshold for routing.
-        yaml_file (str): Path to tree YAML definition.
-        cache_file (str): Path to embedding cache JSON file.
+        yaml_file (str): Path to the YAML file defining the tree structure.
+        cache_file (str): Path to the JSON file for embedding cache.
     """
     client: OpenAI
     embedding_model: str
@@ -55,13 +55,8 @@ class SemanticRouterConfig:
     yaml_file: str
     cache_file: str
 
-client = OpenAI(
-    api_key=api_key,
-    base_url=base_url
-)
-
 config = SemanticRouterConfig(
-    client=client,
+    client=OpenAI(api_key=api_key, base_url=base_url),
     embedding_model=embedding_model,
     embedding_dimensions=embedding_dimensions,
     embedding_chunk_size=embedding_chunk_size,

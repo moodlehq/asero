@@ -10,7 +10,7 @@ def main():
     # Let's play with the router.
     while True:
         try:
-            print(f"\nType a query to see top-{top} semantic routes (ctrl-C to exit):")
+            print(f"Type a query to see top-{top} semantic routes (ctrl-C to exit):")
             q = input("You: ").strip()
             matches = router.root.top_n_routes(q, router.embedding_cache, top_n=top)
             print("")
