@@ -1,9 +1,13 @@
 #  Copyright (c) 2025, Moodle HQ - Research
 #  SPDX-License-Identifier: BSD-3-Clause
 
+"""Main module, demonstration purposes, for asero semantic router."""
+
 from asero.router import SemanticRouter
 
+
 def main():
+    """Demonstrate the SemanticRouter functionality."""
     router = SemanticRouter()  # Defaults to router_example.yaml
     top = 3
 

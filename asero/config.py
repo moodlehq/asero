@@ -1,11 +1,16 @@
 #  Copyright (c) 2025, Moodle HQ - Research
 #  SPDX-License-Identifier: BSD-3-Clause
 
-import os
+"""Configuration for asero semantic router."""
+
 import logging
-from openai import OpenAI
+import os
+
 from dataclasses import dataclass
+
 from dotenv import load_dotenv
+from openai import OpenAI
+
 from asero import ROOT_DIR
 
 logger = logging.getLogger(__name__)
@@ -18,7 +23,8 @@ api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")  # Default to OpenAI's URL
 
 if not api_key:
-    raise ValueError("OPENAI_API_KEY must be set in the environment")
+    msg = "OPENAI_API_KEY environment variable is not set."
+    raise ValueError(msg)
 
 # --- Embedding model, chunk size, and dimensions ---
 embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
@@ -33,10 +39,10 @@ if not os.path.isabs(yaml_tree_path):
     yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
 cache_json_path = f"{os.path.splitext(yaml_tree_path)[0]}_cache.json"
 
+
 @dataclass
 class SemanticRouterConfig:
-    """
-    Dataclass for semantic router configuration.
+    """Dataclass for semantic router configuration.
 
     Attributes:
         client (OpenAI): OpenAI API client instance for embedding queries.
@@ -46,7 +52,9 @@ class SemanticRouterConfig:
         threshold (float): Similarity threshold for routing.
         yaml_file (str): Path to the YAML file defining the tree structure.
         cache_file (str): Path to the JSON file for embedding cache.
+
     """
+
     client: OpenAI
     embedding_model: str
     embedding_dimensions: int
@@ -55,6 +63,8 @@ class SemanticRouterConfig:
     yaml_file: str
     cache_file: str
 
+
+# Create the configuration instance.
 config = SemanticRouterConfig(
     client=OpenAI(api_key=api_key, base_url=base_url),
     embedding_model=embedding_model,

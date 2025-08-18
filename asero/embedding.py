@@ -1,14 +1,17 @@
 #  Copyright (c) 2025, Moodle HQ - Research
 #  SPDX-License-Identifier: BSD-3-Clause
 
+"""Embeddings for asero semantic router."""
+
 import logging
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-def get_embeddings(texts, config):
-    """
-    Compute embeddings for a list of texts using the OpenAI API.
+
+def get_embeddings(texts, config) -> list[np.ndarray]:
+    """Compute embeddings for a list of texts using the OpenAI API.
 
     Args:
         texts (list[str]): List of text strings to embed.
@@ -16,6 +19,7 @@ def get_embeddings(texts, config):
 
     Returns:
         list[np.ndarray]: List of embedding vectors.
+
     """
     if not texts:
         return []
@@ -32,8 +36,7 @@ def get_embeddings(texts, config):
 
 
 def get_or_create_embeddings(utterances, config, cache):
-    """
-    Retrieve embeddings for a list of utterances, fetching missing ones from the API.
+    """Retrieve embeddings for a list of utterances, fetching missing ones from the API.
 
     Args:
         utterances (list[str]): List of utterances to get embeddings for.
@@ -42,6 +45,7 @@ def get_or_create_embeddings(utterances, config, cache):
 
     Returns:
         list[np.ndarray]: List of embedding vectors in the same order as input utterances.
+
     """
     embeddings = []
     to_fetch = []
@@ -63,8 +67,7 @@ def get_or_create_embeddings(utterances, config, cache):
 
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray):
-    """
-    Compute cosine similarity between two vectors.
+    """Compute cosine similarity between two vectors.
 
     Args:
         a (np.ndarray): First vector.
@@ -72,5 +75,6 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray):
 
     Returns:
         float: Cosine similarity score between -1 and 1.
+
     """
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-16))

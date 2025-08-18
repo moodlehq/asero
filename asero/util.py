@@ -1,85 +1,89 @@
 #  Copyright (c) 2025, Moodle HQ - Research
 #  SPDX-License-Identifier: BSD-3-Clause
 
-import logging
-import yaml
+"""Utilities for asero semantic router."""
+
 import hashlib
 import json
-import numpy as np
+import logging
 import os
+
+import numpy as np
+import yaml
+
 from asero.embedding import get_embeddings
 
 logger = logging.getLogger(__name__)
 
+
 def load_tree_from_yaml(yaml_file):
-    """
-    Load a YAML tree structure from a file.
+    """Load a YAML tree structure from a file.
 
     Args:
         yaml_file (str): Path to the YAML file.
 
     Returns:
         dict: Parsed YAML content as a dictionary.
+
     """
-    with open(yaml_file, 'r', encoding='utf-8') as f:
+    with open(yaml_file, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def save_tree_to_yaml(tree, yaml_file):
-    """
-    Save a tree structure to a YAML file.
+    """Save a tree structure to a YAML file.
 
     Args:
         tree (SemanticRouterNode): Root node of the tree to save.
         yaml_file (str): Path to the YAML file.
+
     """
-    with open(yaml_file, 'w', encoding='utf-8') as f:
+    with open(yaml_file, "w", encoding="utf-8") as f:
         yaml.dump(node_to_yaml_dict(tree), f, sort_keys=False, indent=2)
 
 
 def node_to_yaml_dict(node):
-    """
-    Convert a SemanticRouterNode to a YAML-compatible dictionary.
+    """Convert a SemanticRouterNode to a YAML-compatible dictionary.
 
     Args:
         node (SemanticRouterNode): Node to convert.
 
     Returns:
         dict: Dictionary representation of the node.
+
     """
     d = {
-        'name': node.name,
+        "name": node.name,
     }
-    if hasattr(node, 'threshold') and hasattr(node, 'parent') and node.parent:
-        d['threshold'] = float(node.threshold)
-    if hasattr(node, 'utterances') and node.utterances:
+    if hasattr(node, "threshold") and hasattr(node, "parent") and node.parent:
+        d["threshold"] = float(node.threshold)
+    if hasattr(node, "utterances") and node.utterances:
         d["utterances"] = node.utterances
     if node.children:
-        d['children'] = [node_to_yaml_dict(child) for child in node.children]
+        d["children"] = [node_to_yaml_dict(child) for child in node.children]
     return d
 
 
 def save_embedding_cache(cache, fname, tree_checksum):
-    """
-    Save the embedding cache to a JSON file.
+    """Save the embedding cache to a JSON file.
 
     Args:
         cache (dict): Dictionary of utterance embeddings.
         fname (str): Path to the JSON file.
         tree_checksum (str): Checksum of the current tree structure.
+
     """
     data = {k: v.tolist() for k, v in cache.items()}
     out = {
         "checksum": tree_checksum,
         "data": data
     }
-    with open(fname, 'w', encoding='utf-8') as f:
+    with open(fname, "w", encoding="utf-8") as f:
         json.dump(out, f)
 
 
 def load_embedding_cache(fname):
-    """
-    Load the embedding cache from a JSON file.
+    """Load the embedding cache from a JSON file.
 
     Args:
         fname (str): Path to the JSON file.
@@ -88,8 +92,9 @@ def load_embedding_cache(fname):
         tuple: (embedding_cache, tree_checksum)
             - embedding_cache (dict): Dictionary of utterance embeddings.
             - tree_checksum (str): Checksum of the tree structure at the time of caching.
+
     """
-    with open(fname, 'r', encoding='utf-8') as f:
+    with open(fname, encoding="utf-8") as f:
         obj = json.load(f)
     data = obj["data"]
     checksum = obj.get("checksum")
@@ -97,9 +102,8 @@ def load_embedding_cache(fname):
     return cache, checksum
 
 
-def load_or_regenerate_embedding_cache_for_tree(tree_root, config, tree_checksum):
-    """
-    Load or regenerate the embedding cache based on the current tree structure.
+def load_or_regenerate_embedding_cache_for_tree(tree_root, config, tree_checksum) -> dict[str, np.ndarray]:
+    """Load or regenerate the embedding cache based on the current tree structure.
 
     If the cache exists and matches the current tree checksum, it is reused.
     Otherwise, the cache is updated incrementally or rebuilt.
@@ -111,6 +115,7 @@ def load_or_regenerate_embedding_cache_for_tree(tree_root, config, tree_checksum
 
     Returns:
         dict: Updated embedding cache.
+
     """
     all_unique_utts = set(tree_root.all_utterances())
     embedding_cache = {}
@@ -144,14 +149,14 @@ def load_or_regenerate_embedding_cache_for_tree(tree_root, config, tree_checksum
 
 
 def compute_dict_checksum(d):
-    """
-    Compute a SHA-256 checksum of a dictionary.
+    """Compute the SHA-256 checksum of a dictionary.
 
     Args:
         d (dict): Dictionary to compute checksum for.
 
     Returns:
         str: SHA-256 checksum as a hexadecimal string.
+
     """
-    data = json.dumps(d, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    data = json.dumps(d, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(data).hexdigest()

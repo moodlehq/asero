@@ -1,21 +1,29 @@
 #  Copyright (c) 2025, Moodle HQ - Research
 #  SPDX-License-Identifier: BSD-3-Clause
 
+"""Main asero semantic router classes."""
+
 import logging
+
 from typing import Self
 
-from asero import LOG_LEVEL, __version__
+import numpy as np
 
-from asero.config import config, SemanticRouterConfig
-from asero.embedding import get_or_create_embeddings, cosine_similarity
-from asero.yaml_utils import compute_dict_checksum, load_tree_from_yaml, save_embedding_cache, \
-    load_or_regenerate_embedding_cache_for_tree
+from asero import LOG_LEVEL, __version__
+from asero.config import SemanticRouterConfig, config
+from asero.embedding import cosine_similarity, get_or_create_embeddings
 from asero.logger import setup_logging
-from asero.yaml_utils import save_tree_to_yaml
+from asero.util import (
+    compute_dict_checksum,
+    load_or_regenerate_embedding_cache_for_tree,
+    load_tree_from_yaml,
+    save_embedding_cache,
+    save_tree_to_yaml,
+)
+
 
 class SemanticRouterNode:
-    """
-    Node in the semantic router hierarchy/tree.
+    """Node in the semantic router hierarchy/tree.
 
     Each node contains:
       - a name,
@@ -34,8 +42,7 @@ class SemanticRouterNode:
         config: SemanticRouterConfig = config,
         threshold: float = config.threshold,
     ):
-        """
-        Initialize a SemanticRouterNode.
+        """Initialize a SemanticRouterNode.
 
         Args:
             name (str): Node name.
@@ -44,6 +51,7 @@ class SemanticRouterNode:
             parent (SemanticRouterNode | None): Parent node. Set by parent, or None for root.
             config (SemanticRouterConfig): Config object.
             threshold (float): Similarity threshold for routing.
+
         """
         self.name = name
         self.utterances = utterances
@@ -58,15 +66,15 @@ class SemanticRouterNode:
         self.embedding_indices = None
 
     @classmethod
-    def load(cls, config: SemanticRouterConfig) -> tuple[Self, dict]:
-        """
-        Load the semantic router tree from a YAML file.
+    def load(cls, config: SemanticRouterConfig) -> tuple["SemanticRouterNode", dict]:
+        """Load the semantic router tree from a YAML file.
 
         Args:
             config (SemanticRouterConfig): Configuration object containing the YAML file path.
 
         Returns:
             tuple[SemanticRouterNode, dict]: A tuple containing the root node and the parsed YAML dictionary.
+
         """
         d = load_tree_from_yaml(config.yaml_file)
         return cls.build(d, config), d
@@ -76,9 +84,8 @@ class SemanticRouterNode:
         cls,
         d: dict,
         config: SemanticRouterConfig
-    ) -> Self:
-        """
-        Build a SemanticRouterNode from a dictionary structure.
+    ) -> "SemanticRouterNode":
+        """Build a SemanticRouterNode from a dictionary structure.
 
         Args:
             d (dict): Dictionary representing the node and its children.
@@ -86,6 +93,7 @@ class SemanticRouterNode:
 
         Returns:
             SemanticRouterNode: The constructed node.
+
         """
         node = SemanticRouterNode(
             d["name"],
@@ -104,23 +112,23 @@ class SemanticRouterNode:
         return node
 
     def save(self, config: SemanticRouterConfig) -> None:
-        """
-        Save the current node and its subtree to a YAML file.
+        """Save the current node and its subtree to a YAML file.
 
         Args:
             config (SemanticRouterConfig): Configuration object containing the YAML file path.
+
         """
         save_tree_to_yaml(self, config.yaml_file)
 
     def find_node(self, path: list[str]) -> Self | None:
-        """
-        Recursively find a node matching the given path (list of names).
+        """Recursively find a node matching the given path (list of names).
 
         Args:
             path (list[str]): Sequence of node names [root, ..., leaf].
 
         Returns:
             SemanticRouterNode | None: The node for the path, or None if not found.
+
         """
         if not path:
             return None
@@ -135,26 +143,26 @@ class SemanticRouterNode:
         return None
 
     def all_utterances(self) -> list[str]:
-        """
-        Recursively gather all utterances in this node and its children.
+        """Recursively gather all utterances in this node and its children.
 
         Returns:
             list[str]: All utterances below (and including) this node.
+
         """
         utt = list(self.utterances)
         for child in self.children:
             utt.extend(child.all_utterances())
         return utt
 
-    def clone_with_parents(self, parent: Self | None = None) -> Self:
-        """
-        Deep copy this subtree, updating parent pointers and propagating config.
+    def clone_with_parents(self, parent: Self | None = None) -> "SemanticRouterNode":
+        """Deep copy this subtree, updating parent pointers and propagating config.
 
         Args:
             parent (SemanticRouterNode | None): Parent reference for clone.
 
         Returns:
             SemanticRouterNode: New tree/subtree, identical structure.
+
         """
         node = SemanticRouterNode(
             self.name,
@@ -168,14 +176,13 @@ class SemanticRouterNode:
 
     def compute_embedding_indices(
         self,
-        embedding_cache: dict[str, list[float]]
+        embedding_cache: dict[str, np.ndarray],
     ) -> None:
-        """
-        For this node (and descendants), set .embedding_indices to all utterances
-        present in the cache from this node up.
+        """Swt the embedding indices for this node and its children.
 
         Args:
-            embedding_cache (dict[str, list[float]]): {utterance: embedding array}
+            embedding_cache (dict[str, np.ndarray]): {utterance: embedding array}
+
         """
         if self.parent is None:
             self.embedding_indices = []
@@ -188,27 +195,27 @@ class SemanticRouterNode:
     def top_n_routes(
         self,
         query: str,
-        embedding_cache: dict[str, list[float]],
+        embedding_cache: dict[str, np.ndarray],
         top_n: int = 3
     ) -> list[tuple[str, float, int, bool]]:
-        """
-        For a given query, return the top-N most similar semantic routes in the hierarchy.
+        """For a given query, return the top-N most similar semantic routes in the hierarchy.
 
         Args:
             query (str): User query string.
-            embedding_cache (dict[str, list[float]]): {utterance: embedding}
+            embedding_cache (dict[str, np.ndarray]): {utterance: embedding}
             top_n (int): Number of top routes to return.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
                 (route_path, similarity_score, depth, is_leaf)
+
         """
         query_embedding = get_or_create_embeddings([query], self.config, embedding_cache)[0]
         sim_cache = {}
         results = {}
 
         def visit(node: Self, path: list[str]) -> None:
-            path_str = '/'.join(path + [node.name])
+            path_str = "/".join(path + [node.name])
             if node.parent is None:
                 for child in node.children:
                     visit(child, path + [node.name])
@@ -221,19 +228,19 @@ class SemanticRouterNode:
                     scores.append(sim_cache[utt])
                 max_score = max(scores)  # We can change this to averages or others in the future.
             else:
-                max_score = float('-inf')
+                max_score = float("-inf")
             threshold = getattr(node, "threshold", config.threshold)
             if max_score < threshold:
                 return  # Children aren't going to be better, (because we are using the max). End branch.
             children_best = []
             for child in node.children:
                 visit(child, path + [node.name])
-                child_path = '/'.join(path + [node.name, child.name])
+                child_path = "/".join(path + [node.name, child.name])
                 if child_path in results:
                     children_best.append(results[child_path][0])
             if children_best and max(children_best) >= max_score:
                 if path_str in results:
-                    del results[path_str] # Remove parents if there is any better child.
+                    del results[path_str]  # Remove parents if there is any better child.
                 return
             results[path_str] = (max_score, len(path) + 1, not node.children)
 
@@ -244,15 +251,15 @@ class SemanticRouterNode:
 
     def persist_tree_and_update_cache(
         self,
-        tree_copy: Self,
-        embedding_cache: dict[str, list[float]]
+        tree_copy: "SemanticRouterNode",
+        embedding_cache: dict[str, np.ndarray]
     ) -> None:
-        """
-        Save a tree to YAML, purge unused embeddings, and update cache.
+        """Save a tree to YAML, purge unused embeddings, and update cache.
 
         Args:
             tree_copy (SemanticRouterNode): Tree to persist.
-            embedding_cache (dict[str, list[float]]): Embedding cache to trim/save.
+            embedding_cache (dict[str, np.ndarray]): Embedding cache to trim/save.
+
         """
         tree_copy.save(self.config)
         all_utts = set(tree_copy.all_utterances())
@@ -267,28 +274,30 @@ class SemanticRouterNode:
         self,
         path: list[str],
         new_utt: str,
-        embedding_cache: dict[str, list[float]]
-    ) -> Self:
-        """
-        Clone current tree, add a new utterance to a node (by path), update cache/YAML.
+        embedding_cache: dict[str, np.ndarray]
+    ) -> "SemanticRouterNode":
+        """Add a new utterance to a node (by path), updating cache/YAML.
 
         Args:
             path (list[str]): Path to node where to add.
             new_utt (str): New utterance to add.
-            embedding_cache (dict[str, list[float]]): Embedding cache, updated as needed.
+            embedding_cache (dict[str, np.ndarray]): Embedding cache, updated as needed.
 
         Returns:
             SemanticRouterNode: Updated root node (possibly reloaded from YAML).
 
         Raises:
             ValueError: If node path not found or root.
+
         """
         if path == [self.name]:
-            raise ValueError("Utterances at root node are not allowed")
+            msg = "Utterances at root node are not allowed"
+            raise ValueError(msg)
         tree_copy = self.clone_with_parents()
         target = tree_copy.find_node(path)
         if target is None:
-            raise ValueError(f"Node path {path} not found for add_utterance")
+            msg = f"Node path {path} not found for add_utterance"
+            raise ValueError(msg)
         if new_utt not in target.utterances:
             target.utterances.append(new_utt)
             _ = get_or_create_embeddings([new_utt], self.config, embedding_cache)
@@ -300,28 +309,30 @@ class SemanticRouterNode:
         self,
         path: list[str],
         utt_to_remove: str,
-        embedding_cache: dict[str, list[float]]
-    ) -> Self:
-        """
-        Clone current tree, remove an utterance from given node, update cache/YAML.
+        embedding_cache: dict[str, np.ndarray]
+    ) -> "SemanticRouterNode":
+        """Remove an utterance from given node (by path), updating cache/YAML.
 
         Args:
             path (list[str]): Path to node for utterance removal.
             utt_to_remove (str): The utterance to remove.
-            embedding_cache (dict[str, list[float]]): Embedding cache.
+            embedding_cache (dict[str, np.ndarray]): Embedding cache.
 
         Returns:
             SemanticRouterNode: Updated root node.
 
         Raises:
             ValueError: If node/path not found or root.
+
         """
         if path == [self.name]:
-            raise ValueError("Utterances at root node are not allowed")
+            msg = "Utterances at root node are not allowed"
+            raise ValueError(msg)
         tree_copy = self.clone_with_parents()
         target = tree_copy.find_node(path)
         if target is None:
-            raise ValueError(f"Node path {path} not found for remove_utterance")
+            msg = f"Node path {path} not found for remove_utterance"
+            raise ValueError(msg)
         target.utterances = [utt for utt in target.utterances if utt != utt_to_remove]
         tree_copy.compute_embedding_indices(embedding_cache)
         self.persist_tree_and_update_cache(tree_copy, embedding_cache)
@@ -331,28 +342,30 @@ class SemanticRouterNode:
         self,
         path: list[str],
         new_utterances: list[str],
-        embedding_cache: dict[str, list[float]]
-    ) -> Self:
-        """
-        Clone tree, replace all utterances of a node, update cache/YAML.
+        embedding_cache: dict[str, np.ndarray]
+    ) -> "SemanticRouterNode":
+        """Replace all utterances of a node (by path), updating cache/YAML.
 
         Args:
             path (list[str]): Node path.
             new_utterances (list[str]): New utterances list.
-            embedding_cache (dict[str, list[float]]): Embedding cache.
+            embedding_cache (dict[str, np.ndarray]): Embedding cache.
 
         Returns:
             SemanticRouterNode: Updated root node.
 
         Raises:
             ValueError: If node/path not found or is root.
+
         """
         if path == [self.name]:
-            raise ValueError("Utterances at root node are not allowed")
+            msg = "Utterances at root node are not allowed"
+            raise ValueError(msg)
         tree_copy = self.clone_with_parents()
         target = tree_copy.find_node(path)
         if target is None:
-            raise ValueError(f"Node path {path} not found for replace_utterances")
+            msg = f"Node path {path} not found for replace_utterances"
+            raise ValueError(msg)
         target.utterances = list(new_utterances)
         _ = get_or_create_embeddings(target.utterances, self.config, embedding_cache)
         tree_copy.compute_embedding_indices(embedding_cache)
@@ -361,17 +374,18 @@ class SemanticRouterNode:
 
 
 class SemanticRouter:
-    """
-    Main class for the semantic router, managing the tree and embedding cache.
+    """Main class for the semantic router, managing the tree and embedding cache.
 
     Attributes:
         root (SemanticRouterNode): Root node of the semantic router tree.
         tree_dict (dict): Parsed YAML tree structure.
         tree_checksum (str): Checksum of the current tree structure.
-        embedding_cache (dict[str, list[float]]): Cache of utterance embeddings.
+        embedding_cache (dict[str, np.ndarray]): Cache of utterance embeddings.
+
     """
 
     def __init__(self):
+        """Initialize the SemanticRouter, loading the tree and embedding cache."""
         setup_logging(level=LOG_LEVEL)
         logger = logging.getLogger(__name__)
         logger.info("Another Semantic Router (asero) starting up...")
