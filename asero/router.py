@@ -196,7 +196,9 @@ class SemanticRouterNode:
         self,
         query: str,
         embedding_cache: dict[str, np.ndarray],
-        top_n: int = 3
+        top_n: int = 3,
+        only_leaves: bool = True,
+        allowed_paths: list[str] = []
     ) -> list[tuple[str, float, int, bool]]:
         """For a given query, return the top-N most similar semantic routes in the hierarchy.
 
@@ -204,6 +206,8 @@ class SemanticRouterNode:
             query (str): User query string.
             embedding_cache (dict[str, np.ndarray]): {utterance: embedding}
             top_n (int): Number of top routes to return.
+            only_leaves (bool): If True, only return leaf nodes.
+            allowed_paths (list[str]): List of allowed paths to filter results.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
@@ -246,6 +250,12 @@ class SemanticRouterNode:
         visit(self, [])
         candidates = [(path, score, depth, is_leaf) for path, (score, depth, is_leaf) in results.items()]
         candidates.sort(key=lambda tup: tup[1], reverse=True)
+
+        if only_leaves:  # Filter to only include leaf nodes
+            candidates = [c for c in candidates if c[3]]
+        if allowed_paths:  # Filter candidates by allowed paths
+            candidates = [c for c in candidates if any(ap in c[0] for ap in allowed_paths)]
+
         return candidates[:top_n]
 
     def persist_tree_and_update_cache(
