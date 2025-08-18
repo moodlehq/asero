@@ -178,7 +178,7 @@ class SemanticRouterNode:
         self,
         embedding_cache: dict[str, np.ndarray],
     ) -> None:
-        """Swt the embedding indices for this node and its children.
+        """Set the embedding indices for this node and its children.
 
         Args:
             embedding_cache (dict[str, np.ndarray]): {utterance: embedding array}
@@ -214,8 +214,9 @@ class SemanticRouterNode:
         sim_cache = {}
         results = {}
 
-        def visit(node: Self, path: list[str]) -> None:
+        def visit(node: Self, path: list[str], parent_score: float = 0) -> None:
             path_str = "/".join(path + [node.name])
+            logging.debug(f"Visiting {path_str}")
             if node.parent is None:
                 for child in node.children:
                     visit(child, path + [node.name])
@@ -227,21 +228,19 @@ class SemanticRouterNode:
                         sim_cache[utt] = cosine_similarity(query_embedding, embedding_cache[utt])
                     scores.append(sim_cache[utt])
                 max_score = max(scores)  # We can change this to averages or others in the future.
+                logging.debug(f"  Max score is {max_score:.7f}")
             else:
                 max_score = float("-inf")
             threshold = getattr(node, "threshold", config.threshold)
             if max_score < threshold:
-                return  # Children aren't going to be better, (because we are using the max). End branch.
-            children_best = []
+                logging.debug(f"  Skipping {path_str} with max score {max_score:.7f} < threshold {threshold:.7f}")
+                return  # Below threshold, skip this node (branch finished).
+            if max_score < parent_score:  # Note this optimisation only works when using max scores.
+                logging.debug(f"  Skipping {path_str} with max score {max_score:.7f} < parent score {parent_score:.7f}")
+                return  # Below parent score, skip this node (branch finished). No way it will become better.
             for child in node.children:
-                visit(child, path + [node.name])
-                child_path = "/".join(path + [node.name, child.name])
-                if child_path in results:
-                    children_best.append(results[child_path][0])
-            if children_best and max(children_best) >= max_score:
-                if path_str in results:
-                    del results[path_str]  # Remove parents if there is any better child.
-                return
+                visit(child, path + [node.name], max_score)
+
             results[path_str] = (max_score, len(path) + 1, not node.children)
 
         visit(self, [])

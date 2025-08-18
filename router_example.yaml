@@ -9,7 +9,7 @@ children:
     - Hi!
     - Hola
     - Ciao
-  - name: positive
+  - name: biased
     threshold: 0.5
     children:
     - name: happy
@@ -19,7 +19,7 @@ children:
       - I'm doing great!
       - Party time
     - name: unhappy
-      threshold: 0.5
+      threshold: 0.4
       utterances:
         - I'm not feeling well
         - I'm sad
