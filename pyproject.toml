@@ -45,9 +45,9 @@ dev = [
 asero = "asero.main:main"
 
 [project.urls]
-Homepage = "https://example.com/research/another-semantic-router"
-Documentation = "https://example.com/research/another-semantic-router"
-Repository = "https://example.com/research/another-semantic-router"
+Homepage = "https://git.in.moodle.com/research/asero.git"
+Documentation = "https://git.in.moodle.com/research/asero.git"
+Repository = "https://git.in.moodle.com/research/asero.git"
 
 [tool.coverage.run]
 branch = true
