@@ -1,0 +1,21 @@
+stages:
+  - check
+pre-commit:
+  stage: check
+  image: python:3.12
+  before_script:
+    # Provide credentials to pip to be able to access to other private repos in this GitLab instance.
+    - echo "machine git.in.moodle.com" > ~/.netrc
+    - echo "login gitlab-ci-token" >> ~/.netrc
+    - echo "password ${CI_JOB_TOKEN}" >> ~/.netrc
+    # Create a virtual environment and install dependencies.
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -q -U pip # Keep pip updated.
+    - pip install -q -e .[dev]
+    - pip install -q pyright[nodejs] # Needed for better getting a nodejs env installed in CIs (see package install instructions).
+  script:
+    - pre-commit run --all-files
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
