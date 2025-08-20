@@ -399,6 +399,7 @@ class SemanticRouter:
         logger = logging.getLogger(__name__)
         logger.info("Another Semantic Router (asero) starting up...")
         logger.info(f"Version: {__version__}")
+        logger.info(f"Using router YAML file: {config.yaml_file}")
 
         self.root, self.tree_dict = SemanticRouterNode.load(config)
         self.tree_checksum = compute_dict_checksum(self.tree_dict)
