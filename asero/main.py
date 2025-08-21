@@ -16,7 +16,7 @@ def main():
         try:
             print(f"Type a query to see top-{top} semantic routes (ctrl-C to exit):")
             q = input("You: ").strip()
-            matches = router.top_n_routes(q, router.embedding_cache, top_n=top)
+            matches = router.top_n_routes(q, top_n=top)
             print("")
             print(f"Query: {q}")
             print("Top nodes:")

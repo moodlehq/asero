@@ -4,6 +4,7 @@
 """Main asero semantic router classes."""
 
 import logging
+import re
 
 from typing import Self
 
@@ -207,7 +208,7 @@ class SemanticRouterNode:
             embedding_cache (dict[str, np.ndarray]): {utterance: embedding}
             top_n (int): Number of top routes to return.
             only_leaves (bool): If True, only return leaf nodes.
-            allowed_paths (list[str]): List of allowed paths to filter results.
+            allowed_paths (list[str]): List of allowed paths (regexp) to filter results.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
@@ -251,10 +252,14 @@ class SemanticRouterNode:
         candidates = [(path, score, depth, is_leaf) for path, (score, depth, is_leaf) in results.items()]
         candidates.sort(key=lambda tup: tup[1], reverse=True)
 
-        if only_leaves:  # Filter to only include leaf nodes
+        if only_leaves:  # Filter to only include leaf nodes.
             candidates = [c for c in candidates if c[3]]
-        if allowed_paths:  # Filter candidates by allowed paths
-            candidates = [c for c in candidates if any(ap in c[0] for ap in allowed_paths)]
+
+        if allowed_paths:  # Filter candidates by allowed paths (regexp).
+            regexes = [re.compile(ap) for ap in allowed_paths]
+            candidates = [
+                c for c in candidates if any(rx.search(c[0]) for rx in regexes)
+            ]
 
         return candidates[:top_n]
 
