@@ -409,7 +409,6 @@ class SemanticRouter:
     def top_n_routes(
         self,
         query: str,
-        embedding_cache: dict[str, np.ndarray],
         top_n: int = 3,
         only_leaves: bool = True,
         allowed_paths: list[str] = []
@@ -418,7 +417,6 @@ class SemanticRouter:
 
         Args:
             query (str): User query string.
-            embedding_cache (dict[str, np.ndarray]): {utterance: embedding}
             top_n (int): Number of top routes to return.
             only_leaves (bool): If True, only return leaf nodes.
             allowed_paths (list[str]): List of allowed paths to filter results.
@@ -430,24 +428,22 @@ class SemanticRouter:
         """
         return self.root.top_n_routes(  # Just wrap the call to the root node's method.
             query,
-            embedding_cache,
+            self.embedding_cache,
             top_n=top_n,
             only_leaves=only_leaves,
-            allowed_paths=allowed_paths
+            allowed_paths=allowed_paths,
         )
 
     def add_utterance(
         self,
         path: list[str],
         new_utt: str,
-        embedding_cache: dict[str, np.ndarray]
     ) -> "SemanticRouterNode":
         """Add a new utterance to a node (by path), updating cache/YAML.
 
         Args:
             path (list[str]): Path to node where to add.
             new_utt (str): New utterance to add.
-            embedding_cache (dict[str, np.ndarray]): Embedding cache, updated as needed.
 
         Returns:
             SemanticRouterNode: Updated root node (possibly reloaded from YAML).
@@ -456,20 +452,18 @@ class SemanticRouter:
             ValueError: If node path not found or root.
 
         """
-        return self.root.add_utterance_transactional(path, new_utt, embedding_cache)
+        return self.root.add_utterance_transactional(path, new_utt, self.embedding_cache)
 
     def remove_utterance(
         self,
         path: list[str],
         utt_to_remove: str,
-        embedding_cache: dict[str, np.ndarray]
     ) -> "SemanticRouterNode":
         """Remove an utterance from given node (by path), updating cache/YAML.
 
         Args:
             path (list[str]): Path to node for utterance removal.
             utt_to_remove (str): The utterance to remove.
-            embedding_cache (dict[str, np.ndarray]): Embedding cache.
 
         Returns:
             SemanticRouterNode: Updated root node.
@@ -478,20 +472,18 @@ class SemanticRouter:
             ValueError: If node/path not found or root.
 
         """
-        return self.root.remove_utterance_transactional(path, utt_to_remove, embedding_cache)
+        return self.root.remove_utterance_transactional(path, utt_to_remove, self.embedding_cache)
 
     def replace_utterances(
         self,
         path: list[str],
         new_utterances: list[str],
-        embedding_cache: dict[str, np.ndarray]
     ) -> "SemanticRouterNode":
         """Replace all utterances of a node (by path), updating cache/YAML.
 
         Args:
             path (list[str]): Node path.
             new_utterances (list[str]): New utterances list.
-            embedding_cache (dict[str, np.ndarray]): Embedding cache.
 
         Returns:
             SemanticRouterNode: Updated root node.
@@ -500,4 +492,4 @@ class SemanticRouter:
             ValueError: If node/path not found or is root.
 
         """
-        return self.root.replace_utterances_transactional(path, new_utterances, embedding_cache)
+        return self.root.replace_utterances_transactional(path, new_utterances, self.embedding_cache)
