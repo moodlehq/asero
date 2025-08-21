@@ -11,7 +11,7 @@ from typing import Self
 import numpy as np
 
 from asero import LOG_LEVEL, __version__
-from asero.config import SemanticRouterConfig, config
+from asero.config import SemanticRouterConfig
 from asero.embedding import cosine_similarity, get_or_create_embeddings
 from asero.logger import setup_logging
 from asero.util import (
@@ -39,9 +39,9 @@ class SemanticRouterNode:
         name: str,
         utterances: list[str],
         children: list[Self],
+        config: SemanticRouterConfig,
         parent: Self | None = None,
-        config: SemanticRouterConfig = config,
-        threshold: float = config.threshold,
+        threshold: float | None = None,
     ):
         """Initialize a SemanticRouterNode.
 
@@ -49,17 +49,17 @@ class SemanticRouterNode:
             name (str): Node name.
             utterances (list[str]): Utterances describing this node.
             children (list[SemanticRouterNode] | None): Child nodes.
-            parent (SemanticRouterNode | None): Parent node. Set by parent, or None for root.
             config (SemanticRouterConfig): Config object.
+            parent (SemanticRouterNode | None): Parent node. Set by parent, or None for root.
             threshold (float): Similarity threshold for routing.
 
         """
         self.name = name
         self.utterances = utterances
         self.children = children or []
-        self.parent = parent
         self.config = config
-        self.threshold = threshold
+        self.parent = parent
+        self.threshold = threshold or config.threshold
         # Propagate config to children:
         for child in self.children:
             child.parent = self
@@ -97,12 +97,12 @@ class SemanticRouterNode:
 
         """
         node = SemanticRouterNode(
-            d["name"],
-            d.get("utterances", []),
-            [],
-            None,
-            config,
-            d.get("threshold", config.threshold),
+            name=d["name"],
+            utterances=d.get("utterances", []),
+            children=[],
+            config=config,
+            parent=None,
+            threshold=d.get("threshold", config.threshold),
         )
         node.children = [
             cls.build(c, config) for c in d.get("children", [])
@@ -166,12 +166,12 @@ class SemanticRouterNode:
 
         """
         node = SemanticRouterNode(
-            self.name,
-            list(self.utterances),
-            [child.clone_with_parents() for child in self.children],
-            parent,
-            self.config,
-            self.threshold
+            name=self.name,
+            utterances=list(self.utterances),
+            children=[child.clone_with_parents() for child in self.children],
+            config=self.config,
+            parent=parent,
+            threshold=self.threshold or self.config.threshold,
         )
         return node
 
@@ -199,7 +199,7 @@ class SemanticRouterNode:
         embedding_cache: dict[str, np.ndarray],
         top_n: int = 3,
         only_leaves: bool = True,
-        allowed_paths: list[str] = []
+        allowed_paths: list[str] | None = None
     ) -> list[tuple[str, float, int, bool]]:
         """For a given query, return the top-N most similar semantic routes in the hierarchy.
 
@@ -221,7 +221,7 @@ class SemanticRouterNode:
 
         def visit(node: Self, path: list[str], parent_score: float = 0) -> None:
             path_str = "/".join(path + [node.name])
-            logging.debug(f"Visiting {path_str}")
+            logging.info(f"Visiting {path_str}")
             if node.parent is None:
                 for child in node.children:
                     visit(child, path + [node.name])
@@ -233,15 +233,15 @@ class SemanticRouterNode:
                         sim_cache[utt] = cosine_similarity(query_embedding, embedding_cache[utt])
                     scores.append(sim_cache[utt])
                 max_score = max(scores)  # We can change this to averages or others in the future.
-                logging.debug(f"  Max score is {max_score:.7f}")
+                logging.info(f"  Max score is {max_score:.7f}")
             else:
                 max_score = float("-inf")
-            threshold = getattr(node, "threshold", config.threshold)
+            threshold = getattr(node, "threshold", self.config.threshold)
             if max_score < threshold:
-                logging.debug(f"  Skipping {path_str} with max score {max_score:.7f} < threshold {threshold:.7f}")
+                logging.info(f"  Skipping {path_str} with max score {max_score:.7f} < threshold {threshold:.7f}")
                 return  # Below threshold, skip this node (branch finished).
             if max_score < parent_score:  # Note this optimisation only works when using max scores.
-                logging.debug(f"  Skipping {path_str} with max score {max_score:.7f} < parent score {parent_score:.7f}")
+                logging.info(f"  Skipping {path_str} with max score {max_score:.7f} < parent score {parent_score:.7f}")
                 return  # Below parent score, skip this node (branch finished). No way it will become better.
             for child in node.children:
                 visit(child, path + [node.name], max_score)
@@ -398,7 +398,10 @@ class SemanticRouter:
 
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        config: SemanticRouterConfig
+    ):
         """Initialize the SemanticRouter, loading the tree and embedding cache."""
         setup_logging(level=LOG_LEVEL)
         logger = logging.getLogger(__name__)
@@ -416,7 +419,7 @@ class SemanticRouter:
         query: str,
         top_n: int = 3,
         only_leaves: bool = True,
-        allowed_paths: list[str] = []
+        allowed_paths: list[str] | None = None
     ) -> list[tuple[str, float, int, bool]]:
         """For a given query, return the top-N most similar semantic routes in the hierarchy.
 

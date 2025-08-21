@@ -3,12 +3,14 @@
 
 """Main module, demonstration purposes, for asero semantic router."""
 
+from asero.config import get_config
 from asero.router import SemanticRouter
 
 
 def main():
     """Demonstrate the SemanticRouter functionality."""
-    router = SemanticRouter()  # Defaults to router_example.yaml
+    config = get_config()
+    router = SemanticRouter(config)  # Defaults to router_example.yaml
     top = 3
 
     # Let's play with the router.

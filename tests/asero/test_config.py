@@ -18,8 +18,9 @@ class TestConfig(unittest.TestCase):
 
     def test_missing_openai_api_key_raises_error(self):
         with patch("os.getenv", return_value=None):
+            config_module = importlib.import_module("asero.config")
             with self.assertRaises(ValueError):
-                importlib.import_module("asero.config")
+                _ = config_module.get_config()
 
     def test_default_embedding_model_used(self):
         with patch("os.getenv") as mock_getenv:
@@ -29,7 +30,8 @@ class TestConfig(unittest.TestCase):
                 }.get
                 with patch("asero.ROOT_DIR", new="/mock/root"):
                     config_module = importlib.import_module("asero.config")
-                    self.assertEqual("nomic-embed-text", config_module.embedding_model)
+                    config = config_module.get_config()
+                    self.assertEqual("nomic-embed-text", config.embedding_model)
 
     def test_yaml_path_resolves_to_absolute(self):
         with patch("os.getenv") as mock_getenv:
@@ -39,7 +41,8 @@ class TestConfig(unittest.TestCase):
             }.get
             with patch("asero.ROOT_DIR", new="/mock/root"):
                 config_module = importlib.import_module("asero.config")
-                self.assertEqual("/mock/root/relative/path.yaml", config_module.yaml_tree_path)
+                config = config_module.get_config()
+                self.assertEqual("/mock/root/relative/path.yaml", config.yaml_file)
 
     def test_cache_file_name_is_correct(self):
         with patch("os.getenv") as mock_getenv:
@@ -49,7 +52,8 @@ class TestConfig(unittest.TestCase):
             }.get
             with patch("asero.ROOT_DIR", new="/mock/root"):
                 config_module = importlib.import_module("asero.config")
-                self.assertEqual("/absolute/path_cache.json", config_module.cache_json_path)
+                config = config_module.get_config()
+                self.assertEqual("/absolute/path_cache.json", config.cache_file)
 
     def test_config_initialization(self):
         with patch("os.getenv") as mock_getenv:
@@ -63,10 +67,11 @@ class TestConfig(unittest.TestCase):
             }.get
             with patch("asero.ROOT_DIR", new="/mock/root"):
                 config_module = importlib.import_module("asero.config")
-                self.assertEqual("test-model", config_module.config.embedding_model)
-                self.assertEqual(100, config_module.config.embedding_dimensions)
-                self.assertEqual(0.7, config_module.config.threshold)
-                self.assertEqual("/mock/root/test.yaml", config_module.config.yaml_file)
+                config = config_module.get_config()
+                self.assertEqual("test-model", config.embedding_model)
+                self.assertEqual(100, config.embedding_dimensions)
+                self.assertEqual(0.7, config.threshold)
+                self.assertEqual("/mock/root/test.yaml", config.yaml_file)
 
 
 if __name__ == "__main__":

@@ -15,30 +15,6 @@ from asero import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
-load_dotenv()
-
-# --- OpenAI Embedding helpers --- #
-api_key = os.getenv("OPENAI_API_KEY")
-base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")  # Default to OpenAI's URL
-
-if not api_key:
-    msg = "OPENAI_API_KEY environment variable is not set."
-    raise ValueError(msg)
-
-# --- Embedding model, chunk size, and dimensions ---
-embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
-embedding_dimensions = int(os.getenv("EMBEDDING_DIMENSIONS", "768"))
-embedding_chunk_size = int(os.getenv("EMBEDDING_CHUNK_SIZE", "128"))
-default_threshold = float(os.getenv("DEFAULT_THRESHOLD", "0.5"))
-
-# --- File paths --- #
-yaml_tree_path = os.getenv("ROUTER_YAML_FILE", "router_example.yaml")
-# If file is relative, make it relative to the project base dir.
-if not os.path.isabs(yaml_tree_path):
-    yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
-cache_json_path = f"{os.path.splitext(yaml_tree_path)[0]}_cache.json"
-
 
 @dataclass
 class SemanticRouterConfig:
@@ -64,13 +40,43 @@ class SemanticRouterConfig:
     cache_file: str
 
 
-# Create the configuration instance.
-config = SemanticRouterConfig(
-    client=OpenAI(api_key=api_key, base_url=base_url),
-    embedding_model=embedding_model,
-    embedding_dimensions=embedding_dimensions,
-    embedding_chunk_size=embedding_chunk_size,
-    threshold=default_threshold,
-    yaml_file=yaml_tree_path,
-    cache_file=cache_json_path,
-)
+def get_config() -> SemanticRouterConfig:
+    """Get the semantic router configuration.
+
+    Returns:
+        SemanticRouterConfig: The configuration instance.
+
+    """
+    # Load environment variables from .env file.
+    load_dotenv()
+
+    # OpenAI Embedding helpers.
+    api_key = os.getenv("OPENAI_API_KEY")
+    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")  # Default to OpenAI's URL
+
+    if not api_key:
+        msg = "OPENAI_API_KEY environment variable is not set."
+        raise ValueError(msg)
+
+    # Embedding model, chunk size, and dimensions.
+    embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
+    embedding_dimensions = int(os.getenv("EMBEDDING_DIMENSIONS", "768"))
+    embedding_chunk_size = int(os.getenv("EMBEDDING_CHUNK_SIZE", "128"))
+    default_threshold = float(os.getenv("DEFAULT_THRESHOLD", "0.5"))
+
+    # File paths.
+    yaml_tree_path = os.getenv("ROUTER_YAML_FILE", "router_example.yaml")
+    # If file is relative, make it relative to the project base dir.
+    if not os.path.isabs(yaml_tree_path):
+        yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
+    cache_json_path = f"{os.path.splitext(yaml_tree_path)[0]}_cache.json"
+
+    return SemanticRouterConfig(
+        client=OpenAI(api_key=api_key, base_url=base_url),
+        embedding_model=embedding_model,
+        embedding_dimensions=embedding_dimensions,
+        embedding_chunk_size=embedding_chunk_size,
+        threshold=default_threshold,
+        yaml_file=yaml_tree_path,
+        cache_file=cache_json_path,
+    )
