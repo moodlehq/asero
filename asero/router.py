@@ -12,7 +12,7 @@ import numpy as np
 
 from asero import LOG_LEVEL, __version__
 from asero.config import SemanticRouterConfig
-from asero.embedding import cosine_similarity, get_or_create_embeddings
+from asero.embedding import cosine_similarity, get_embeddings, get_or_create_embeddings
 from asero.logger import setup_logging
 from asero.util import (
     compute_dict_checksum,
@@ -21,6 +21,8 @@ from asero.util import (
     save_embedding_cache,
     save_tree_to_yaml,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SemanticRouterNode:
@@ -215,13 +217,19 @@ class SemanticRouterNode:
                 (route_path, similarity_score, depth, is_leaf)
 
         """
-        query_embedding = get_or_create_embeddings([query], self.config, embedding_cache)[0]
+        embedding = get_embeddings([query], self.config)
         sim_cache = {}
         results = {}
 
+        if not query.strip() or not embedding:
+            logger.warning("Empty query or embedding, returning empty results.")
+            return []
+
+        query_embedding = embedding[0]
+
         def visit(node: Self, path: list[str], parent_score: float = 0) -> None:
             path_str = "/".join(path + [node.name])
-            logging.info(f"Visiting {path_str}")
+            logger.debug(f"Visiting {path_str}")
             if node.parent is None:
                 for child in node.children:
                     visit(child, path + [node.name])
@@ -233,15 +241,15 @@ class SemanticRouterNode:
                         sim_cache[utt] = cosine_similarity(query_embedding, embedding_cache[utt])
                     scores.append(sim_cache[utt])
                 max_score = max(scores)  # We can change this to averages or others in the future.
-                logging.info(f"  Max score is {max_score:.7f}")
+                logger.debug(f"  Max score is {max_score:.7f}")
             else:
                 max_score = float("-inf")
             threshold = getattr(node, "threshold", self.config.threshold)
             if max_score < threshold:
-                logging.info(f"  Skipping {path_str} with max score {max_score:.7f} < threshold {threshold:.7f}")
+                logger.debug(f"  Skipping {path_str} with max score {max_score:.7f} < threshold {threshold:.7f}")
                 return  # Below threshold, skip this node (branch finished).
             if max_score < parent_score:  # Note this optimisation only works when using max scores.
-                logging.info(f"  Skipping {path_str} with max score {max_score:.7f} < parent score {parent_score:.7f}")
+                logger.debug(f"  Skipping {path_str} with max score {max_score:.7f} < parent score {parent_score:.7f}")
                 return  # Below parent score, skip this node (branch finished). No way it will become better.
             for child in node.children:
                 visit(child, path + [node.name], max_score)
@@ -404,7 +412,6 @@ class SemanticRouter:
     ):
         """Initialize the SemanticRouter, loading the tree and embedding cache."""
         setup_logging(level=LOG_LEVEL)
-        logger = logging.getLogger(__name__)
         logger.info("Another Semantic Router (asero) starting up...")
         logger.info(f"Version: {__version__}")
         logger.info(f"Using router YAML file: {config.yaml_file}")

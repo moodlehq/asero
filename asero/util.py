@@ -11,7 +11,7 @@ import os
 import numpy as np
 import yaml
 
-from asero.embedding import get_embeddings
+from asero.embedding import get_or_create_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -131,20 +131,19 @@ def load_or_regenerate_embedding_cache_for_tree(tree_root, config, tree_checksum
             missing_utts = [utt for utt in all_unique_utts if utt not in embedding_cache]
             if missing_utts:
                 logger.info(f"Computing embeddings for {len(missing_utts)} new utterances.")
-                new_embs = get_embeddings(missing_utts, config)
-                for utt, emb in zip(missing_utts, new_embs):
-                    embedding_cache[utt] = emb
+                _ = get_or_create_embeddings(missing_utts, config, embedding_cache)
             else:
                 logger.info("No new utterances to embed.")
+
             save_embedding_cache(embedding_cache, config.cache_file, tree_checksum)
             logger.info("Cache rebuilt and saved.")
     else:
         logger.info("No embedding cache found. Building new cache...")
-        new_embs = get_embeddings(list(all_unique_utts), config)
-        for utt, emb in zip(all_unique_utts, new_embs):
-            embedding_cache[utt] = emb
+        _ = get_or_create_embeddings(list(all_unique_utts), config, embedding_cache)
+
         save_embedding_cache(embedding_cache, config.cache_file, tree_checksum)
         logger.info("Cache built and saved.")
+
     return embedding_cache
 
 

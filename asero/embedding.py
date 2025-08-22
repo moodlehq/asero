@@ -10,7 +10,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def get_embeddings(texts, config) -> list[np.ndarray]:
+def get_embeddings(texts, config) -> list[np.ndarray] | None:
     """Compute embeddings for a list of texts using the OpenAI API.
 
     Args:
@@ -21,8 +21,10 @@ def get_embeddings(texts, config) -> list[np.ndarray]:
         list[np.ndarray]: List of embedding vectors.
 
     """
+    texts = [t.strip() for t in texts if t.strip()]  # Filter out empties.
     if not texts:
-        return []
+        return None  # Something went wrong, no texts to embed.
+
     embeddings = []
     num_chunks = (len(texts) + config.embedding_chunk_size - 1) // config.embedding_chunk_size
     logger.info(f"Computing embeddings for {len(texts):,} texts in {num_chunks:,} chunks")
@@ -32,6 +34,7 @@ def get_embeddings(texts, config) -> list[np.ndarray]:
         chunk_texts = texts[start_idx:end_idx]
         resp = config.client.embeddings.create(input=chunk_texts, model=config.embedding_model)
         embeddings.extend([np.array(d.embedding) for d in resp.data])
+
     return embeddings
 
 
@@ -59,10 +62,16 @@ def get_or_create_embeddings(utterances, config, cache):
             embeddings.append(None)
     if to_fetch:
         fetched = get_embeddings(to_fetch, config)
-        for i, utt in enumerate(to_fetch):
-            cache[utt] = fetched[i]
-        for i, idx in enumerate(fetch_indices):
-            embeddings[idx] = fetched[i]
+        if not fetched:
+            # Something went wrong, no embeddings fetched.
+            logger.error("Failed to fetch embeddings for any new utterance.")
+        else:
+            # Got embeddings for the new utterances.
+            for i, utt in enumerate(to_fetch):
+                cache[utt] = fetched[i]
+            for i, idx in enumerate(fetch_indices):
+                embeddings[idx] = fetched[i]
+
     return embeddings
 
 
