@@ -40,8 +40,13 @@ class SemanticRouterConfig:
     cache_file: str
 
 
-def get_config() -> SemanticRouterConfig:
+def get_config(yaml_tree_path: str | None = None) -> SemanticRouterConfig:
     """Get the semantic router configuration.
+
+    Args:
+        yaml_tree_path (str | None): Optional path to the YAML file defining the tree structure.
+            If None, it will use the path defined in the environment variable `ROUTER_YAML_FILE`.
+            If the environment variable is not set, it defaults to `router_example.yaml`
 
     Returns:
         SemanticRouterConfig: The configuration instance.
@@ -65,10 +70,12 @@ def get_config() -> SemanticRouterConfig:
     default_threshold = float(os.getenv("DEFAULT_THRESHOLD", "0.5"))
 
     # File paths.
-    yaml_tree_path = os.getenv("ROUTER_YAML_FILE", "router_example.yaml")
-    # If file is relative, make it relative to the project base dir.
-    if not os.path.isabs(yaml_tree_path):
-        yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
+    if yaml_tree_path is None:
+        # If no path is provided, use the environment variable or default.
+        yaml_tree_path = os.getenv("ROUTER_YAML_FILE", "router_example.yaml")
+        # If file is relative, make it relative to the project base dir.
+        if not os.path.isabs(yaml_tree_path):
+            yaml_tree_path = os.path.join(ROOT_DIR, yaml_tree_path)
     cache_json_path = f"{os.path.splitext(yaml_tree_path)[0]}_cache.json"
 
     return SemanticRouterConfig(
