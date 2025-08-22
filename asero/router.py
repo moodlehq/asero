@@ -210,7 +210,7 @@ class SemanticRouterNode:
             embedding_cache (dict[str, np.ndarray]): {utterance: embedding}
             top_n (int): Number of top routes to return.
             only_leaves (bool): If True, only return leaf nodes.
-            allowed_paths (list[str]): List of allowed paths (regexp) to filter results.
+            allowed_paths (list[str]): List of allowed paths (regex) to filter results.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
@@ -258,18 +258,38 @@ class SemanticRouterNode:
 
         visit(self, [])
         candidates = [(path, score, depth, is_leaf) for path, (score, depth, is_leaf) in results.items()]
+        candidates = self.filter_candidates(candidates, only_leaves, allowed_paths)
         candidates.sort(key=lambda tup: tup[1], reverse=True)
 
-        if only_leaves:  # Filter to only include leaf nodes.
-            candidates = [c for c in candidates if c[3]]
+        return candidates[:top_n]
 
-        if allowed_paths:  # Filter candidates by allowed paths (regexp).
+    def filter_candidates(
+            self,
+            candidates: list[tuple[str, float, int, bool]],
+            only_leaves: bool, allowed_paths: list[str] | None
+    ) -> list[tuple[str, float, int, bool]]:
+        """Filter results based on only_leaves and allowed_paths criteria.
+
+        Args:
+            candidates (list[tuple[str, float, int, bool]]): List of candidate routes
+            only_leaves (bool): If True, filter to only include leaf nodes.
+            allowed_paths (list[str] | None): List of allowed paths (regex) to filter
+
+        Returns:
+            list[tuple[str, float, int, bool]]: Filtered list of candidates.
+
+        """
+        results = candidates
+        if only_leaves:  # Filter to only include leaf nodes.
+            results = [c for c in results if c[3]]
+
+        if allowed_paths:  # Filter candidates by allowed paths (regex).
             regexes = [re.compile(ap) for ap in allowed_paths]
-            candidates = [
-                c for c in candidates if any(rx.search(c[0]) for rx in regexes)
+            results = [
+                c for c in results if any(rx.search(c[0]) for rx in regexes)
             ]
 
-        return candidates[:top_n]
+        return results
 
     def persist_tree_and_update_cache(
         self,
