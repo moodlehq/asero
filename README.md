@@ -31,7 +31,32 @@ A(nother) semantic routing system that classifies user queries into hierarchical
 5. Test, test, test. Try to cover as much as possible always.
 
 ## Use as library
-<<<coming soon>>>
+
+Don't forget to configure the `.env` file (see "Quick start" above).
+
+```python
+from asero import config as asero_config
+from asero.router import SemanticRouter
+
+# Load the configuration from a YAML file (see router_example.yaml)
+config = asero_config.get_config("path/to/valid/router.yaml")
+
+# Create a router instance
+router = SemanticRouter(config)
+
+# Start making queries (explore options in the SemanticRouter class)
+matches = router.top_n_routes(query="Hi!")
+
+# Print the top matches (route, score, depth, leaf)
+[print(match) for match in matches]
+```
+
+Will output something like:
+```
+('router_example/greetings/neutral', 0.9999999999999999, 3, True)
+('router_example/chitchat', 0.48668323180162615, 2, True)
+```
+
 
 ## License
 
