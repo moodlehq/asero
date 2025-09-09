@@ -32,7 +32,16 @@ def get_embeddings(texts, config) -> list[np.ndarray] | None:
         start_idx = i * config.embedding_chunk_size
         end_idx = min((i + 1) * config.embedding_chunk_size, len(texts))
         chunk_texts = texts[start_idx:end_idx]
-        resp = config.client.embeddings.create(input=chunk_texts, model=config.embedding_model)
+        # Note that not all OpenAI APIs support the dimensions parameter. For example,
+        # Ollama does not (neither its native API nor the OpenAI-compatible one). In that
+        # case, the parameter will be ignored and the default dimensions of the model
+        # will be used. If you are using some AI proxy/router, you may need to
+        # drop that parameter too (if it leads to errors).
+        resp = config.client.embeddings.create(
+            input=chunk_texts,
+            model=config.embedding_model,
+            dimensions=config.embedding_dimensions,
+        )
         embeddings.extend([np.array(d.embedding) for d in resp.data])
 
     return embeddings
