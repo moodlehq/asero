@@ -34,11 +34,14 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "build ~= 1.3.0",
-    "coverage ~= 7.10.3",
+    "codespell ~= 2.4.1",
+    "conventional-pre-commit ~= 4.2.0",
+    "coverage ~= 7.10.6",
     "detect-secrets ~= 1.5.0",
+    "git-cliff ~= 2.10.0",
     "pre-commit ~= 4.3.0",
-    "pyright ~= 1.1.402",
-    "ruff ~= 0.12.8",
+    "pyright ~= 1.1.405",
+    "ruff ~= 0.13.0",
 ]
 
 [project.scripts]
@@ -101,8 +104,16 @@ max-line-length = 120
 "**/__init__.py" = ["F401"] # Ignore the unused imports in init files because we use them to make easier package paths.
 "tests/**/test_**.py" = ["D101", "D102", "D103"] # Don't require doc strings for tests
 
+[tool.codespell]
+ignore-words-list = [
+  "upport" # Part of regular expressions in cliff.toml
+]
+
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+include = ["asero"]
