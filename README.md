@@ -1,4 +1,4 @@
-# asero - Semantic Router for Intent Classification
+# Asero - Semantic Router for Intent Classification
 
 A(nother) semantic routing system that classifies user queries into hierarchical categories using OpenAI embeddings and cosine similarity.
 
@@ -29,6 +29,8 @@ A(nother) semantic routing system that classifies user queries into hierarchical
 3. Setup the `.env` file (start with the provided `env_template`one).
 4. Hack, hack, hack (the `asero` CLI command, that runs `main.py`, should be enough)
 5. Test, test, test. Try to cover as much as possible always.
+
+(see the [Contributing](#Contributing) section for more details)
 
 ## Use as library
 
@@ -61,6 +63,14 @@ Will output something like:
 ## License
 
 This project is licensed under the BSD 3-Clause License. See the [LICENSE](LICENSE) file for more information.
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
+
+## Code of Conduct
+
+Please note that this project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold this code.
 
 ----
 © 2025 Moodle Research Team
