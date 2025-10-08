@@ -2,7 +2,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 
 """Main asero semantic router classes."""
-
+import asyncio
 import logging
 import re
 
@@ -448,7 +448,7 @@ class SemanticRouter:
         only_leaves: bool = True,
         allowed_paths: list[str] | None = None
     ) -> list[tuple[str, float, int, bool]]:
-        """For a given query, return the top-N most similar semantic routes in the hierarchy.
+        """Get (synchronously) for a given query, the top-N most similar semantic routes in the hierarchy.
 
         Args:
             query (str): User query string.
@@ -468,6 +468,28 @@ class SemanticRouter:
             only_leaves=only_leaves,
             allowed_paths=allowed_paths,
         )
+
+    async def atop_n_routes(
+        self,
+        query: str,
+        top_n: int = 3,
+        only_leaves: bool = True,
+        allowed_paths: list[str] | None = None
+    ) -> list[tuple[str, float, int, bool]]:
+        """Get (asynchronously) for a given query, the top-N most similar semantic routes in the hierarchy.
+
+        Args:
+            query (str): User query string.
+            top_n (int): Number of top routes to return.
+            only_leaves (bool): If True, only return leaf nodes.
+            allowed_paths (list[str]): List of allowed paths to filter results.
+
+        Returns:
+            list[tuple[str, float, int, bool]]: List of tuples:
+                (route_path, similarity_score, depth, is_leaf)
+
+        """
+        return await asyncio.to_thread(self.top_n_routes, query, top_n, only_leaves, allowed_paths)
 
     def add_utterance(
         self,

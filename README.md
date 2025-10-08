@@ -49,6 +49,9 @@ router = SemanticRouter(config)
 # Start making queries (explore options in the SemanticRouter class)
 matches = router.top_n_routes(query="Hi!")
 
+# Or, for async contexts:
+matches = await router.atop_n_routes(query="Hi!")
+
 # Print the top matches (route, score, depth, leaf)
 [print(match) for match in matches]
 ```

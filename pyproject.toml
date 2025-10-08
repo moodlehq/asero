@@ -28,6 +28,7 @@ dependencies = [
     "colorlog ~= 6.9.0",
     "numpy ~= 2.3.3",
     "openai ~= 1.106.1",
+    "python-dotenv ~= 1.1.1",
 ]
 
 [project.optional-dependencies]

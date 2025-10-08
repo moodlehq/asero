@@ -2,12 +2,13 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 
 """Main module, demonstration purposes, for asero semantic router."""
+import asyncio
 
 from asero.config import get_config
 from asero.router import SemanticRouter
 
 
-def main():
+async def main():
     """Demonstrate the SemanticRouter functionality."""
     config = get_config()
     router = SemanticRouter(config)  # Defaults to router_example.yaml
@@ -17,8 +18,8 @@ def main():
     while True:
         try:
             print(f"Type a query to see top-{top} semantic routes (ctrl-C to exit):")
-            q = input("You: ").strip()
-            matches = router.top_n_routes(q, top_n=top)
+            q = (await asyncio.to_thread(input, "You: ")).strip()
+            matches = await router.atop_n_routes(q, top_n=top)
             print("")
             print(f"Query: {q}")
             print("Top nodes:")
@@ -33,4 +34,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
