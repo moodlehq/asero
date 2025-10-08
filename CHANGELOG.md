@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 and commits should be formatted using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Dependencies: Bump various libraries.
+
+### Fixed
+
+- Docs: Solve a configuration problem with CHANGELOG generation by @stronk7 ([f7d4032](https://github.com/moodlehq/asero/commit/f7d403253f96e8eafe091441832c5d26a6402d58))
 ## [0.3.0] - 2025-09-15
 
 ### Added
@@ -151,6 +160,7 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 **Full Changelog**: https://github.com/moodlehq/asero/compare/v0.2.0...v0.2.1
 
+[unreleased]: https://github.com/moodlehq/asero/compare/v0.3.0..HEAD
 [0.3.0]: https://github.com/moodlehq/asero/compare/v0.2.14..v0.3.0
 [0.2.14]: https://github.com/moodlehq/asero/compare/v0.2.13..v0.2.14
 [0.2.13]: https://github.com/moodlehq/asero/compare/v0.2.12..v0.2.13

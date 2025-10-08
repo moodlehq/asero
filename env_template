@@ -5,7 +5,7 @@ OPENAI_API_KEY=
 # Embedding defaults, uncomment and configure to suit your own models.
 #EMBEDDING_MODEL=nomic-embed-text
 #EMBEDDING_DIMENSIONS=768
-#EMBEDDING_CHUNK_SIZE=128
+#EMBEDDING_CHUNK_SIZE=128 # Note that this number of utterances need to fit within the embeddings model context.
 
 # Router file specification and default threshold. Uncomment with your preferences.
 #ROUTER_YAML_FILE=router_example.yaml
