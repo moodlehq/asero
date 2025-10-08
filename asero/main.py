@@ -3,12 +3,14 @@
 
 """Main module, demonstration purposes, for asero semantic router."""
 import asyncio
+import sys
+import traceback
 
 from asero.config import get_config
 from asero.router import SemanticRouter
 
 
-async def main():
+async def run():
     """Demonstrate the SemanticRouter functionality."""
     config = get_config()
     router = SemanticRouter(config)  # Defaults to router_example.yaml
@@ -33,5 +35,21 @@ async def main():
             break
 
 
+def main():
+    """Prepare the async loop for operation and graceful shutdown, then run()."""
+    # Create the event loop, set it as current and add the signal handlers.
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    asyncio.get_event_loop_policy().set_event_loop(loop)
+    exitcode = 0
+    try:
+        loop.run_until_complete(run())  # Run the main loop.
+    except Exception:
+        traceback.print_exc()
+        exitcode = 1
+    finally:
+        loop.close()
+        sys.exit(exitcode)
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

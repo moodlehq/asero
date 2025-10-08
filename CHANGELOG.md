@@ -8,13 +8,18 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 ## [Unreleased]
 
+### Added
+
+- Async: Provide a new `atop_n_routes()` function for async contexts by @stronk7 ([d3d707e](https://github.com/moodlehq/asero/commit/d3d707e448801e8f749f999d815683bce74d63ed))
+
 ### Changed
 
-- Dependencies: Bump various libraries.
+- Dependencies: Bump various libraries by @stronk7 ([4342f2a](https://github.com/moodlehq/asero/commit/4342f2af949d0770692ad95f1f841b212ac2e6fb))
 
 ### Fixed
 
 - Docs: Solve a configuration problem with CHANGELOG generation by @stronk7 ([f7d4032](https://github.com/moodlehq/asero/commit/f7d403253f96e8eafe091441832c5d26a6402d58))
+- CLI: Support the new async functions from the CLI.
 ## [0.3.0] - 2025-09-15
 
 ### Added
