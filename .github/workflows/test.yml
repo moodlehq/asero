@@ -33,4 +33,9 @@ jobs:
           echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
           echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
       - name: Run pre-commit
-        run: pre-commit run --all
+        run: |
+          pre-commit run --all
+      - name: Coverage
+        run: |
+          coverage run
+          coverage report
