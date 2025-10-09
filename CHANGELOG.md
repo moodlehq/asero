@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 and commits should be formatted using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- Router: Validate tree thresholds are correct, auto-fix and warn.
 ## [0.4.0] - 2025-10-08
 
 ### Added
@@ -168,6 +173,7 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 **Full Changelog**: https://github.com/moodlehq/asero/compare/v0.2.0...v0.2.1
 
+[unreleased]: https://github.com/moodlehq/asero/compare/v0.4.0..HEAD
 [0.4.0]: https://github.com/moodlehq/asero/compare/v0.3.0..v0.4.0
 [0.3.0]: https://github.com/moodlehq/asero/compare/v0.2.14..v0.3.0
 [0.2.14]: https://github.com/moodlehq/asero/compare/v0.2.13..v0.2.14

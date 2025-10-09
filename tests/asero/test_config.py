@@ -24,14 +24,13 @@ class TestConfig(unittest.TestCase):
 
     def test_default_embedding_model_used(self):
         with patch("os.getenv") as mock_getenv:
-            with patch("os.getenv") as mock_getenv:
-                mock_getenv.side_effect = {
-                    "OPENAI_API_KEY": "test-key",  # pragma: allowlist-secret
-                }.get
-                with patch("asero.ROOT_DIR", new="/mock/root"):
-                    config_module = importlib.import_module("asero.config")
-                    config = config_module.get_config()
-                    self.assertEqual("nomic-embed-text", config.embedding_model)
+            mock_getenv.side_effect = {
+                "OPENAI_API_KEY": "test-key",  # pragma: allowlist-secret
+            }.get
+            with patch("asero.ROOT_DIR", new="/mock/root"):
+                config_module = importlib.import_module("asero.config")
+                config = config_module.get_config()
+                self.assertEqual("nomic-embed-text", config.embedding_model)
 
     def test_yaml_path_resolves_to_absolute(self):
         with patch("os.getenv") as mock_getenv:

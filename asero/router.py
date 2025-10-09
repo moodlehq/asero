@@ -61,7 +61,7 @@ class SemanticRouterNode:
         self.children = children or []
         self.config = config
         self.parent = parent
-        self.threshold = threshold or config.threshold
+        self.threshold = threshold if threshold is not None else config.threshold
         # Propagate config to children:
         for child in self.children:
             child.parent = self
@@ -414,6 +414,40 @@ class SemanticRouterNode:
         self.persist_tree_and_update_cache(tree_copy, embedding_cache)
         return tree_copy
 
+    @classmethod
+    def validate_and_fix_nodes(cls, node: Self):
+        """Validate and fix the thresholds of the tree starting from the given node."""
+        _ = cls._enforce_threshold_rule(node)  # Fixes thresholds in place and warn.
+
+    @classmethod
+    def _enforce_threshold_rule(cls, node: Self) -> float:
+        """Recursively ensure no node has a threshold above its children thresholds."""
+        # This is a post-order traversal: process children before parent.
+        if node.children:
+            # List to store the adjusted thresholds of all children
+            adjusted_children_thresholds = []
+            for child in node.children:
+                adjusted_children_thresholds.append(cls._enforce_threshold_rule(child))
+
+            # Find the minimum of the children's adjusted thresholds.
+            # This is the maximum value the current node's threshold can be
+            # while still satisfying the "not higher than any child" rule.
+            min_child_threshold = min(adjusted_children_thresholds)
+
+            # Check if the current node's threshold violates the rule
+            if node.threshold > min_child_threshold:
+                logger.warning(
+                    f"ACTION: Adjusting '{node.name}' threshold from {node.threshold} "
+                    f"to {min_child_threshold}. (It was higher than its child with minimum "
+                    f"threshold {min_child_threshold})"
+                )
+                node.threshold = min_child_threshold
+            # If node.threshold <= min_child_threshold, it's already valid, so no change is needed.
+
+        # Return the current node's (potentially adjusted) threshold.
+        # Its parent will use this value when calculating its own adjustment.
+        return node.threshold
+
 
 class SemanticRouter:
     """Main class for the semantic router, managing the tree and embedding cache.
@@ -437,6 +471,7 @@ class SemanticRouter:
         logger.info(f"Using router YAML file: {config.yaml_file}")
 
         self.root, self.tree_dict = SemanticRouterNode.load(config)
+        self.root.validate_and_fix_nodes(self.root)
         self.tree_checksum = compute_dict_checksum(self.tree_dict)
         self.embedding_cache = load_or_regenerate_embedding_cache_for_tree(self.root, config, self.tree_checksum)
         self.root.compute_embedding_indices(self.embedding_cache)
