@@ -6,11 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 and commits should be formatted using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
-## [Unreleased]
+## [0.4.1] - 2025-10-09
 
 ### Added
 
-- Router: Validate tree thresholds are correct, auto-fix and warn.
+- Router: Validate tree thresholds are correct, auto-fix and warn by @stronk7 ([32b20cf](https://github.com/moodlehq/asero/commit/32b20cf3b640a4b0ce9934f0b500c6b0e0705521))
+
+### Fixed
+
+- GitHub: Add coverage information to the test workflow by @stronk7 ([5df76c2](https://github.com/moodlehq/asero/commit/5df76c293243135945dfee06a227b5ff46bd658a))
+
+**Full Changelog**: https://github.com/moodlehq/asero/compare/v0.4.0...v0.4.1
+
 ## [0.4.0] - 2025-10-08
 
 ### Added
@@ -173,7 +180,7 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 **Full Changelog**: https://github.com/moodlehq/asero/compare/v0.2.0...v0.2.1
 
-[unreleased]: https://github.com/moodlehq/asero/compare/v0.4.0..HEAD
+[0.4.1]: https://github.com/moodlehq/asero/compare/v0.4.0..v0.4.1
 [0.4.0]: https://github.com/moodlehq/asero/compare/v0.3.0..v0.4.0
 [0.3.0]: https://github.com/moodlehq/asero/compare/v0.2.14..v0.3.0
 [0.2.14]: https://github.com/moodlehq/asero/compare/v0.2.13..v0.2.14
