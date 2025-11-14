@@ -38,8 +38,8 @@ async def run():
 def main():
     """Prepare the async loop for operation and graceful shutdown, then run()."""
     # Create the event loop, set it as current and add the signal handlers.
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    asyncio.get_event_loop_policy().set_event_loop(loop)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     exitcode = 0
     try:
         loop.run_until_complete(run())  # Run the main loop.
