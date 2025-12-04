@@ -7,6 +7,7 @@ import hashlib
 import json
 import logging
 import os
+import uuid
 
 import numpy as np
 import yaml
@@ -94,12 +95,16 @@ def load_embedding_cache(fname):
             - tree_checksum (str): Checksum of the tree structure at the time of caching.
 
     """
-    with open(fname, encoding="utf-8") as f:
-        obj = json.load(f)
-    data = obj["data"]
-    checksum = obj.get("checksum")
-    cache = {k: np.array(v) for k, v in data.items()}
-    return cache, checksum
+    try:
+        with open(fname, encoding="utf-8") as f:
+            obj = json.load(f)
+        data = obj["data"]
+        checksum = obj.get("checksum")
+        cache = {k: np.array(v) for k, v in data.items()}
+        return cache, checksum
+    except Exception:
+        # Return empty cache and random checksum to force rebuild
+        return {}, str(uuid.uuid4())
 
 
 def load_or_regenerate_embedding_cache_for_tree(tree_root, config, tree_checksum) -> dict[str, np.ndarray]:

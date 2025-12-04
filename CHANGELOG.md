@@ -12,7 +12,12 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 - Dependencies: Bump various libraries by @stronk7 ([4467bc1](https://github.com/moodlehq/asero/commit/4467bc15b3364f0e0d189f0f4b942afdabcd253d))
 - GitHub: Run checks and tests with Python 3.14 by @stronk7 ([ada611c](https://github.com/moodlehq/asero/commit/ada611cb2010a19adbd0d27a12def45d8992d915))
-- Deprecation: Stop using `get_event_loop_policy()`, deprecated in Python >= 3.14
+- Deprecation: Stop using `get_event_loop_policy()`, deprecated in Python >= 3.14 by @stronk7 ([58856a6](https://github.com/moodlehq/asero/commit/58856a6029983b4b7e4b5377ecbbc7e1aa505e8c))
+
+### Fixed
+
+- Embeddings: Solve a problem when loading a malformed cache file
+
 ## [0.4.1] - 2025-10-09
 
 ### Added
