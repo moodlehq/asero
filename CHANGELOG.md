@@ -10,7 +10,8 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 ### Added
 
-- Augment: Add LLM-based utterance augmentation script
+- Augment: Add LLM-based utterance augmentation script ([9656f2c](https://github.com/moodlehq/asero/commit/9656f2c59eb5f432dd082737195755d8a6f823e5))
+- Eval: Add new evaluation module with evaluate and optimise utilities
 
 ## [0.4.3] - 2026-01-09
 
