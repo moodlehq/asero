@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html),
 and commits should be formatted using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- Augment: Add LLM-based utterance augmentation script
+
 ## [0.4.3] - 2026-01-09
 
 ### Changed
@@ -203,6 +209,7 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 **Full Changelog**: https://github.com/moodlehq/asero/compare/v0.2.0...v0.2.1
 
+[unreleased]: https://github.com/moodlehq/asero/compare/v0.4.3..HEAD
 [0.4.3]: https://github.com/moodlehq/asero/compare/v0.4.2..v0.4.3
 [0.4.2]: https://github.com/moodlehq/asero/compare/v0.4.1..v0.4.2
 [0.4.1]: https://github.com/moodlehq/asero/compare/v0.4.0..v0.4.1

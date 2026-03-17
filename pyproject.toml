@@ -29,6 +29,8 @@ dependencies = [
     "numpy ~= 2.4.0",
     "openai >= 2.14.0, < 3.0.0",
     "python-dotenv ~= 1.2.1",
+    "PyYAML ~= 6.0.3",
+    "tqdm ~= 4.67.1",
 ]
 
 [project.optional-dependencies]
@@ -46,10 +48,11 @@ dev = [
 
 [project.scripts]
 asero = "asero.main:main"
+augment = "asero.augment:main"
 
 [project.urls]
-Homepage = "https://git.in.moodle.com/research/asero.git"
-Documentation = "https://git.in.moodle.com/research/asero.git"
+Homepage = "https://github.com/moodlehq/asero"
+Documentation = "https://github.com/moodlehq/asero/blob/main/README.md"
 Repository = "https://git.in.moodle.com/research/asero.git"
 
 [tool.coverage.run]

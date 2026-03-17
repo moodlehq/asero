@@ -15,3 +15,6 @@ __pycache__
 build/
 dist/
 *.egg-info
+# Augmented eval datasets
+*_eval.json
+*_eval_query_cache.json

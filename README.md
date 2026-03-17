@@ -32,6 +32,26 @@ A(nother) semantic routing system that classifies user queries into hierarchical
 
 (see the [Contributing](#Contributing) section for more details)
 
+## CLI commands
+
+### `augment` — generate an evaluation dataset via LLM
+
+Uses a configured LLM (accessed through any OpenAI-compatible endpoint) to synthetically paraphrase every utterance in your router YAML, producing a JSON file ready for `asero --evaluate` or `asero --optimise`.
+
+```
+augment [--input-file <router.yaml>] [--output-file <out.json>] [--model <name>] [--variations N] [--limit N]
+```
+
+- **`--input-file`** — router YAML to read utterances from (defaults to `$ROUTER_YAML_FILE`).
+- **`--output-file`** — destination JSON file (defaults to `<input-stem>_eval.json`).
+- **`--model`** — LLM model name at the configured endpoint (default: `llama3.3-70b`).
+- **`--variations`** — number of paraphrases to generate per utterance (default: `5`).
+- **`--limit`** — process only the first N utterances; `0` means all (default: `0`).
+
+Requires `OPENAI_API_KEY` and `OPENAI_BASE_URL` to be set (e.g. via `.env`). The script validates that the requested model is available at the endpoint before starting.
+
+Run `augment --help` for full details.
+
 ## Use as library
 
 Don't forget to configure the `.env` file (see "Quick start" above).
