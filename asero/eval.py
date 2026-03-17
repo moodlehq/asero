@@ -24,39 +24,39 @@ from asero.util import (
 logger = logging.getLogger(__name__)
 
 
-def _load_query_cache(test_file: str, config) -> tuple[dict, str, str]:
-    """Load (or initialise) the query embedding cache for a test file.
+def _load_query_cache(eval_file: str, config) -> tuple[dict, str, str]:
+    """Load (or initialise) the query embedding cache for an eval file.
 
     Args:
-        test_file (str): Absolute path to the test JSON file.
+        eval_file (str): Absolute path to the eval JSON file.
         config: Router configuration object.
 
     Returns:
         Tuple of (query_cache, query_cache_path, expected_checksum).
 
     """
-    query_cache_path = os.path.splitext(test_file)[0] + "_query_cache.json"
+    query_cache_path = os.path.splitext(eval_file)[0] + "_query_cache.json"
     expected_checksum = compute_embedding_config_checksum(config)
     cached_data, cached_checksum = load_embedding_cache(query_cache_path)
     query_cache = cached_data if cached_checksum == expected_checksum else {}
     return query_cache, query_cache_path, expected_checksum
 
 
-def _load_test_data(test_file: str) -> list | None:
-    """Load and return test cases from a JSON file.
+def _load_eval_data(eval_file: str) -> list | None:
+    """Load and return eval cases from a JSON file.
 
     Args:
-        test_file (str): Absolute path to the test JSON file.
+        eval_file (str): Absolute path to the eval JSON file.
 
     Returns:
-        Parsed list of test cases, or ``None`` if the file is not valid JSON.
+        Parsed list of eval cases, or ``None`` if the file is not valid JSON.
 
     """
-    with open(test_file, encoding="utf-8") as f:
+    with open(eval_file, encoding="utf-8") as f:
         try:
             return json.load(f)
         except json.decoder.JSONDecodeError:
-            logger.error(f"Test file '{test_file}' is not a valid JSON file.")
+            logger.error(f"Eval file '{eval_file}' is not a valid JSON file.")
             return None
 
 
@@ -70,37 +70,37 @@ class EvaluationResult:
     is_leaf: bool
 
 
-def evaluate(test_file: str, metric: str = "top1"):
-    """Run evaluation on the supplied test-file instead of the interactive loop.
+def evaluate(eval_file: str, metric: str = "top1"):
+    """Run evaluation on the supplied eval file instead of the interactive loop.
 
     Args:
-        test_file (str): Path to the JSON test file.
+        eval_file (str): Path to the JSON eval file.
         metric (str): Evaluation metric — ``"top1"`` through ``"top5"``.
             Defaults to ``"top1"``.
 
     """
-    if not os.path.isabs(test_file):
-        test_file = os.path.join(ROOT_DIR, test_file)
+    if not os.path.isabs(eval_file):
+        eval_file = os.path.join(ROOT_DIR, eval_file)
 
-    if not os.path.isfile(test_file) or not os.access(test_file, os.R_OK):
-        logger.error(f"Test file '{test_file}' does not exist or is not readable.")
+    if not os.path.isfile(eval_file) or not os.access(eval_file, os.R_OK):
+        logger.error(f"Eval file '{eval_file}' does not exist or is not readable.")
         return
 
     top_k = int(metric[3:])
     mrr_k = top_k + 1  # MRR@(K+1): always one position beyond top-K so it carries extra information
     top_n = mrr_k
 
-    # We are going to load the router, then the test file, and compute metrics
+    # We are going to load the router, then the eval file, and compute metrics
     config = get_config()
     router = SemanticRouter(config, eval_mode=False)  # Defaults to router_example.yaml
 
-    query_cache, query_cache_path, expected_checksum = _load_query_cache(test_file, config)
+    query_cache, query_cache_path, expected_checksum = _load_query_cache(eval_file, config)
 
-    test_data = _load_test_data(test_file)
-    if test_data is None:
+    eval_data = _load_eval_data(eval_file)
+    if eval_data is None:
         return
 
-    # Iterate over test cases, invoking the router and collecting metrics.
+    # Iterate over eval cases, invoking the router and collecting metrics.
     topk_hits = 0          # cases where expected appears in the top-K results
     reciprocal_ranks = []  # 1/rank if found within mrr_k (= top_k+1), else 0.0
     y_score = []           # best similarity score
@@ -108,9 +108,9 @@ def evaluate(test_file: str, metric: str = "top1"):
 
     # Evaluation loop
     # get the last 100 elements for quick testing
-    # test_data = test_data[-100:] if len(test_data) > 100 else test_data
+    # eval_data = eval_data[-100:] if len(eval_data) > 100 else eval_data
 
-    for case in tqdm(test_data, desc="Evaluating"):
+    for case in tqdm(eval_data, desc="Evaluating"):
 
         utterance = case["utterance"]
         expected = case["match"]
@@ -159,18 +159,15 @@ def evaluate(test_file: str, metric: str = "top1"):
     # Calculate metrics.
     total = len(reciprocal_ranks)
     if not total:
-        logger.warning("No test cases to evaluate.")
+        logger.warning("No eval cases to evaluate.")
         return
 
     topk_accuracy = topk_hits / total
     mrr = sum(reciprocal_ranks) / total
 
-    skipped = len(test_data) - total
     print("Evaluation finished.")
     print(f"Evaluation metric     : {metric}")
-    print(f"Total test cases      : {len(test_data)}")
-    print(f"Router cases (skipped): {skipped}")
-    print(f"Test cases (evaluated): {total}")
+    print(f"Total eval cases      : {total}")
     print(f"Top-{top_k} Accuracy  : {topk_accuracy:0.7f}")
     print(f"MRR@{mrr_k}                  : {mrr:0.7f}")
 
@@ -202,26 +199,26 @@ def _compute_metric_for_threshold(query_results: list, route: str, threshold: fl
     return hits
 
 
-def optimise(test_file: str, metric: str = "top1", write: bool = False):
-    """Run threshold optimisation on the supplied test-file.
+def optimise(eval_file: str, metric: str = "top1", write: bool = False):
+    """Run threshold optimisation on the supplied eval file.
 
     Loads the router in eval mode (thresholds disabled), collects raw similarity
-    scores for every test case, then sweeps candidate thresholds per route to
+    scores for every eval case, then sweeps candidate thresholds per route to
     maximise the chosen metric.  Recommended thresholds are printed as a table
     and, when ``write=True``, written back to the YAML file.
 
     Args:
-        test_file (str): Path to the JSON test file.
+        eval_file (str): Path to the JSON eval file.
         metric (str): Optimisation objective — ``"top1"`` through ``"top5"``.
             Defaults to ``"top1"``.
         write (bool): If True, write optimised thresholds back to the YAML file.
 
     """
-    if not os.path.isabs(test_file):
-        test_file = os.path.join(ROOT_DIR, test_file)
+    if not os.path.isabs(eval_file):
+        eval_file = os.path.join(ROOT_DIR, eval_file)
 
-    if not os.path.isfile(test_file) or not os.access(test_file, os.R_OK):
-        logger.error(f"Test file '{test_file}' does not exist or is not readable.")
+    if not os.path.isfile(eval_file) or not os.access(eval_file, os.R_OK):
+        logger.error(f"Eval file '{eval_file}' does not exist or is not readable.")
         return
 
     print(
@@ -233,16 +230,16 @@ def optimise(test_file: str, metric: str = "top1", write: bool = False):
     # eval_mode=True disables all thresholds so every route is considered.
     router = SemanticRouter(config, eval_mode=True)
 
-    query_cache, query_cache_path, expected_checksum = _load_query_cache(test_file, config)
+    query_cache, query_cache_path, expected_checksum = _load_query_cache(eval_file, config)
 
-    test_data = _load_test_data(test_file)
-    if test_data is None:
+    eval_data = _load_eval_data(eval_file)
+    if eval_data is None:
         return
 
     # Collect per-query full score vectors (top_n=1000 ≈ unlimited).
     query_results: list[dict] = []
 
-    for case in tqdm(test_data, desc="Collecting scores"):
+    for case in tqdm(eval_data, desc="Collecting scores"):
 
         utterance = case["utterance"]
         expected = case["match"]

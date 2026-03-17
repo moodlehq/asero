@@ -1,12 +1,15 @@
 #  Copyright (c) 2025, Moodle HQ - Research
 #  SPDX-License-Identifier: BSD-3-Clause
 
-"""Main module, demonstration purposes, for asero semantic router."""
+"""Main module, demonstration purposes, evaluate and optimise, for asero semantic router."""
+
+import argparse
 import asyncio
 import sys
 import traceback
 
 from asero.config import get_config
+from asero.eval import evaluate, optimise
 from asero.router import SemanticRouter
 
 
@@ -36,13 +39,42 @@ async def run():
 
 
 def main():
-    """Prepare the async loop for operation and graceful shutdown, then run()."""
-    # Create the event loop, set it as current and add the signal handlers.
+    """Parse CLI args and dispatch to run() or evaluate()."""
+    parser = argparse.ArgumentParser(description="Asero semantic-router demo")
+    parser.add_argument(
+        "--evaluate",
+        metavar="<path to eval file>",
+        help="Run evaluation on the specified eval file instead of the REPL",
+    )
+    parser.add_argument(
+        "--optimise",
+        metavar="<path to eval file>",
+        help="Run threshold optimisation on the specified eval file",
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        default=False,
+        help="Write optimised thresholds back to the YAML file (only used with --optimise)",
+    )
+    parser.add_argument(
+        "--metric",
+        choices=["top1", "top2", "top3", "top4", "top5"],
+        default="top1",
+        help="Metric for --evaluate and --optimise (default: top1)",
+    )
+    args = parser.parse_args()
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     exitcode = 0
     try:
-        loop.run_until_complete(run())  # Run the main loop.
+        if args.evaluate:
+            evaluate(args.evaluate, metric=args.metric)  # Let's execute the evaluation.
+        elif args.optimise:
+            optimise(args.optimise, metric=args.metric, write=args.write)  # Run threshold optimisation.
+        else:
+            loop.run_until_complete(run())  # Run the interactive demo.
     except Exception:
         traceback.print_exc()
         exitcode = 1

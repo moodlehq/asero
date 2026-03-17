@@ -12,10 +12,11 @@ and commits should be formatted using [Conventional Commits](https://www.convent
 
 - Augment: Add LLM-based utterance augmentation script ([9656f2c](https://github.com/moodlehq/asero/commit/9656f2c59eb5f432dd082737195755d8a6f823e5))
 - Eval: Add new evaluation module with evaluate and optimise utilities ([4b3f837](https://github.com/moodlehq/asero/commit/4b3f8378129af7cfd2e86ef64d558c4acc7f2fd0))
-
+- Eval: Add support to evaluate and optimise from the `asero` command
+-
 ### Changed
 
-- Dependencies: Bump library and dev dependencies to current ones
+- Dependencies: Bump library and dev dependencies to current ones ([730c9a9](https://github.com/moodlehq/asero/commit/730c9a97e83ef4f84e064e852fff43a2fcb2224d))
 
 ## [0.4.3] - 2026-01-09
 

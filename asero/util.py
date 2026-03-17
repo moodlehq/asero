@@ -164,3 +164,22 @@ def compute_dict_checksum(d):
     """
     data = json.dumps(d, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(data).hexdigest()
+
+
+def compute_embedding_config_checksum(config) -> str:
+    """Compute a checksum based solely on embedding model and dimensions.
+
+    Used to invalidate a query embedding cache when the embedding configuration
+    changes, independently of any tree structure changes.
+
+    Args:
+        config (SemanticRouterConfig): Configuration object.
+
+    Returns:
+        str: SHA-256 checksum as a hexadecimal string.
+
+    """
+    return compute_dict_checksum({
+        "embedding_model": config.embedding_model,
+        "embedding_dimensions": config.embedding_dimensions,
+    })

@@ -44,6 +44,7 @@ class SemanticRouterNode:
         config: SemanticRouterConfig,
         parent: Self | None = None,
         threshold: float | None = None,
+        eval_mode: bool = False,
     ):
         """Initialize a SemanticRouterNode.
 
@@ -54,6 +55,7 @@ class SemanticRouterNode:
             config (SemanticRouterConfig): Config object.
             parent (SemanticRouterNode | None): Parent node. Set by parent, or None for root.
             threshold (float): Similarity threshold for routing.
+            eval_mode (bool): Whether this instance is for evaluation purposes.
 
         """
         self.name = name
@@ -61,38 +63,43 @@ class SemanticRouterNode:
         self.children = children or []
         self.config = config
         self.parent = parent
-        self.threshold = threshold if threshold is not None else config.threshold
+        self.threshold = 0 if eval_mode else threshold if threshold is not None else config.threshold
+        self.eval_mode = eval_mode
         # Propagate config to children:
         for child in self.children:
             child.parent = self
             child.config = self.config
+            child.eval_mode = self.eval_mode
         self.embedding_indices = None
 
     @classmethod
-    def load(cls, config: SemanticRouterConfig) -> tuple["SemanticRouterNode", dict]:
+    def load(cls, config: SemanticRouterConfig, eval_mode: bool = False) -> tuple["SemanticRouterNode", dict]:
         """Load the semantic router tree from a YAML file.
 
         Args:
             config (SemanticRouterConfig): Configuration object containing the YAML file path.
+            eval_mode (bool, optional): Whether this instance is for evaluation purposes. Defaults to False.
 
         Returns:
             tuple[SemanticRouterNode, dict]: A tuple containing the root node and the parsed YAML dictionary.
 
         """
         d = load_tree_from_yaml(config.yaml_file)
-        return cls.build(d, config), d
+        return cls.build(d, config, eval_mode), d
 
     @classmethod
     def build(
         cls,
         d: dict,
-        config: SemanticRouterConfig
+        config: SemanticRouterConfig,
+        eval_mode: bool = False,
     ) -> "SemanticRouterNode":
         """Build a SemanticRouterNode from a dictionary structure.
 
         Args:
             d (dict): Dictionary representing the node and its children.
             config (SemanticRouterConfig): Configuration object.
+            eval_mode (bool, optional): Whether this instance is for evaluation purposes. Defaults to False.
 
         Returns:
             SemanticRouterNode: The constructed node.
@@ -104,10 +111,10 @@ class SemanticRouterNode:
             children=[],
             config=config,
             parent=None,
-            threshold=d.get("threshold", config.threshold),
+            threshold=0 if eval_mode else d.get("threshold", config.threshold),
         )
         node.children = [
-            cls.build(c, config) for c in d.get("children", [])
+            cls.build(c, config, eval_mode) for c in d.get("children", [])
         ]
         for child in node.children:
             child.parent = node
@@ -173,7 +180,7 @@ class SemanticRouterNode:
             children=[child.clone_with_parents() for child in self.children],
             config=self.config,
             parent=parent,
-            threshold=self.threshold or self.config.threshold,
+            threshold=0 if self.eval_mode else self.threshold or self.config.threshold,
         )
         return node
 
@@ -201,7 +208,8 @@ class SemanticRouterNode:
         embedding_cache: dict[str, np.ndarray],
         top_n: int = 3,
         only_leaves: bool = True,
-        allowed_paths: list[str] | None = None
+        allowed_paths: list[str] | None = None,
+        query_cache: dict[str, np.ndarray] | None = None,
     ) -> list[tuple[str, float, int, bool]]:
         """For a given query, return the top-N most similar semantic routes in the hierarchy.
 
@@ -211,13 +219,23 @@ class SemanticRouterNode:
             top_n (int): Number of top routes to return.
             only_leaves (bool): If True, only return leaf nodes.
             allowed_paths (list[str]): List of allowed paths (regex) to filter results.
+            query_cache (dict[str, np.ndarray] | None): Optional shared cache for query
+                embeddings. When provided, the query embedding is looked up before
+                calling the API and stored on miss. Pass None for interactive use. Note that
+                this is mostly used for evaluations and threshold optimisations, not
+                much useful for normal usage, where questions rarely repeat.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
                 (route_path, similarity_score, depth, is_leaf)
 
         """
-        embedding = get_embeddings([query], self.config)
+        if query_cache is not None and query in query_cache:
+            embedding = [query_cache[query]]
+        else:
+            embedding = get_embeddings([query], self.config)
+            if query_cache is not None and embedding:
+                query_cache[query] = embedding[0]
         sim_cache = {}
         results = {}
 
@@ -462,15 +480,18 @@ class SemanticRouter:
 
     def __init__(
         self,
-        config: SemanticRouterConfig
+        config: SemanticRouterConfig,
+        eval_mode: bool = False,
     ):
         """Initialize the SemanticRouter, loading the tree and embedding cache."""
         setup_logging(level=LOG_LEVEL)
         logger.info("Another Semantic Router (asero) starting up...")
         logger.info(f"Version: {__version__}")
         logger.info(f"Using router YAML file: {config.yaml_file}")
+        if eval_mode:
+            logger.info("Evaluation mode: thresholds disabled.")
 
-        self.root, self.tree_dict = SemanticRouterNode.load(config)
+        self.root, self.tree_dict = SemanticRouterNode.load(config, eval_mode=eval_mode)
         self.root.validate_and_fix_nodes(self.root)
         self.tree_checksum = compute_dict_checksum(self.tree_dict)
         self.embedding_cache = load_or_regenerate_embedding_cache_for_tree(self.root, config, self.tree_checksum)
@@ -481,7 +502,8 @@ class SemanticRouter:
         query: str,
         top_n: int = 3,
         only_leaves: bool = True,
-        allowed_paths: list[str] | None = None
+        allowed_paths: list[str] | None = None,
+        query_cache: dict[str, np.ndarray] | None = None,
     ) -> list[tuple[str, float, int, bool]]:
         """Get (synchronously) for a given query, the top-N most similar semantic routes in the hierarchy.
 
@@ -490,6 +512,8 @@ class SemanticRouter:
             top_n (int): Number of top routes to return.
             only_leaves (bool): If True, only return leaf nodes.
             allowed_paths (list[str]): List of allowed paths to filter results.
+            query_cache (dict[str, np.ndarray] | None): Optional shared cache for query
+                embeddings. See SemanticRouterNode.top_n_routes() for details.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
@@ -502,6 +526,7 @@ class SemanticRouter:
             top_n=top_n,
             only_leaves=only_leaves,
             allowed_paths=allowed_paths,
+            query_cache=query_cache,
         )
 
     async def atop_n_routes(
@@ -509,7 +534,8 @@ class SemanticRouter:
         query: str,
         top_n: int = 3,
         only_leaves: bool = True,
-        allowed_paths: list[str] | None = None
+        allowed_paths: list[str] | None = None,
+        query_cache: dict[str, np.ndarray] | None = None,
     ) -> list[tuple[str, float, int, bool]]:
         """Get (asynchronously) for a given query, the top-N most similar semantic routes in the hierarchy.
 
@@ -518,13 +544,17 @@ class SemanticRouter:
             top_n (int): Number of top routes to return.
             only_leaves (bool): If True, only return leaf nodes.
             allowed_paths (list[str]): List of allowed paths to filter results.
+            query_cache (dict[str, np.ndarray] | None): Optional shared cache for query
+                embeddings. See SemanticRouterNode.top_n_routes() for details.
 
         Returns:
             list[tuple[str, float, int, bool]]: List of tuples:
                 (route_path, similarity_score, depth, is_leaf)
 
         """
-        return await asyncio.to_thread(self.top_n_routes, query, top_n, only_leaves, allowed_paths)
+        return await asyncio.to_thread(
+            self.top_n_routes, query, top_n, only_leaves, allowed_paths, query_cache
+        )
 
     def add_utterance(
         self,
