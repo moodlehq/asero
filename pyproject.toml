@@ -26,24 +26,24 @@ dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
     "colorlog ~= 6.10.1",
-    "numpy ~= 2.4.0",
-    "openai >= 2.14.0, < 3.0.0",
-    "python-dotenv ~= 1.2.1",
+    "numpy ~= 2.4.3",
+    "openai >= 2.29.0, < 3.0.0",
+    "python-dotenv ~= 1.2.2",
     "PyYAML ~= 6.0.3",
-    "tqdm ~= 4.67.1",
+    "tqdm ~= 4.67.3",
 ]
 
 [project.optional-dependencies]
 dev = [
     "build ~= 1.4.0",
-    "codespell ~= 2.4.1",
-    "conventional-pre-commit ~= 4.3.0",
-    "coverage ~= 7.13.1",
+    "codespell ~= 2.4.2",
+    "conventional-pre-commit ~= 4.4.0",
+    "coverage ~= 7.13.5",
     "detect-secrets ~= 1.5.0",
-    "git-cliff ~= 2.11.0",
+    "git-cliff ~= 2.12.0",
     "pre-commit ~= 4.5.1",
     "pyright ~= 1.1.408",
-    "ruff ~= 0.14.11",
+    "ruff ~= 0.15.6",
 ]
 
 [project.scripts]
